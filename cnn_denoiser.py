@@ -1,7 +1,6 @@
 import datetime
 import pathlib
 from dataclasses import dataclass
-import math
 
 import torch
 from torch import nn
@@ -44,36 +43,33 @@ class Measurements:
 
 def train(train_noised: pathlib.Path,
           train_cleaned: pathlib.Path,
-          num_layers: int,
-          patch_size: int,
-          batch_size: int,
-          workers: int,
-          num_epochs: int,
-          learning_rate: float,
           postfix: str,
-          resize_size: int = 128,
-          weight_decay: float = 1e-4,
           parameters_path: pathlib.Path | None = None) -> None:
     cnn = DnCNN(
-        num_layers=num_layers,
+        num_layers=nn_utils.Config.num_layers,
         parameters_path=parameters_path
     )
     cnn.to(_DEVICE)
 
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(cnn.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
+    optimizer = optim.Adam(
+        cnn.parameters(),
+        lr=nn_utils.Config.learning_rate,
+        weight_decay=nn_utils.Config.weight_decay
+    )
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=nn_utils.Config.num_epochs
+    )
 
     dataset = nn_utils.DnCnnDataset(
         noised_data_path=train_noised,
         cleaned_data_path=train_cleaned,
-        resize_size=resize_size,
-        patch_size=patch_size
     )
     data_loader = torch.utils.data.DataLoader(
         dataset=dataset,
-        batch_size=batch_size,
-        num_workers=workers,
+        batch_size=nn_utils.Config.batch_size,
+        num_workers=nn_utils.Config.num_workers,
         shuffle=True,
         pin_memory=True,
         drop_last=True
@@ -85,7 +81,7 @@ def train(train_noised: pathlib.Path,
 
     states_path = pathlib.Path("model_states")
     current_date = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    model_name = f"Model_{postfix}_{num_layers}l_{num_epochs}e_{patch_size}p_{current_date}"
+    model_name = f"Model_{postfix}_{nn_utils.Config.num_layers}l_{current_date}"
     current_states_path = states_path / "DnCNN" / model_name
     current_states_path.mkdir(parents=True, exist_ok=True)
     measurements = Measurements(
@@ -93,9 +89,9 @@ def train(train_noised: pathlib.Path,
         train_loss=[]
     )
 
-    for epoch in range(num_epochs):
-        with tqdm(total=(len(dataset) - len(dataset) % batch_size)) as tqdm_:
-            tqdm_.set_description(f"Epoch {epoch + 1}/{num_epochs}")
+    for epoch in range(nn_utils.Config.num_epochs):
+        with tqdm(total=(len(dataset) - len(dataset) % nn_utils.Config.batch_size)) as tqdm_:
+            tqdm_.set_description(f"Epoch {epoch + 1}/{nn_utils.Config.num_epochs}")
             total_psnr_train = .0
             total_loss_train = .0
 
@@ -144,35 +140,16 @@ def train(train_noised: pathlib.Path,
 
 def test(parameters_path: pathlib.Path,
          test_path: pathlib.Path,
-         real_path: pathlib.Path,
-         num_layers: int,
-         patch_size: int) -> None:
-    def from_patches(img_tensor: torch.Tensor, y: int, x: int) -> np.ndarray:
-        img_tensor = torch.clamp(img_tensor, 0, 1)
-
-        num_patches, *_ = img_tensor.shape
-        row_length = num_patches // math.ceil(x / patch_size)
-
-        numpy_patches = np.transpose(
-            np.uint8(img_tensor.detach().numpy() * 255.),
-            axes=(0, 2, 3, 1)
-        )
-        row_patches = np.split(numpy_patches, row_length)
-        rows = [np.hstack(row) for row in row_patches]
-        img_numpy = np.vstack(rows)[:y, :x, :]
-
-        return img_numpy
-
+         real_path: pathlib.Path) -> None:
     cnn = DnCNN(
-        num_layers=num_layers,
+        num_layers=nn_utils.Config.num_layers,
         parameters_path=parameters_path
     )
     cnn.eval()
 
     dataset = nn_utils.DnCnnDatasetTest(
         noised_data_path=test_path,
-        cleaned_data_path=real_path,
-        patch_size=patch_size
+        cleaned_data_path=real_path
     )
 
     with torch.no_grad():
