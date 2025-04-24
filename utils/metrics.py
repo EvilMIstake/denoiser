@@ -39,8 +39,8 @@ def peak_signal_to_noise_ratio(img_prior: np.ndarray, img_predicted: np.ndarray)
     шкалы децибел)
     """
     max_i = 255.
-    rmsd_ = rmsd(img_prior, img_predicted)
-    metric = 20. * np.log10(max_i) - 10. * np.log10(rmsd_)
+    mse_ = mse(img_prior, img_predicted)
+    metric = 20. * np.log10(max_i) - 10. * np.log10(mse_)
 
     return metric
 

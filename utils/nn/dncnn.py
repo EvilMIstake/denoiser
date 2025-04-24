@@ -20,7 +20,7 @@ class DnCNN(nn.Module):
                     kernel_size=3,
                     stride=1,
                     padding=1,
-                    bias=False
+                    # bias=False
                 ),
                 nn.ReLU(inplace=True)
             )
@@ -33,7 +33,7 @@ class DnCNN(nn.Module):
                         num_features,
                         kernel_size=3,
                         padding=1,
-                        bias=False
+                        # bias=False
                     ),
                     nn.BatchNorm2d(num_features),
                     nn.ReLU(inplace=True)
@@ -45,10 +45,10 @@ class DnCNN(nn.Module):
                 3,
                 kernel_size=3,
                 padding=1,
-                bias=False
+                # bias=False
             )
         )
-        layers.append(nn.Sigmoid())
+        # layers.append(nn.Sigmoid())
 
         self.layers = nn.Sequential(*layers)
 
