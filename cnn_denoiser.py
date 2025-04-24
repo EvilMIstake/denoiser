@@ -265,7 +265,7 @@ def test(test_path: pathlib.Path,
 
 if __name__ == "__main__":
     # Postfix
-    px = "noised-add-impulse"
+    px = "add"
 
     dataset_name = f"imagenet-mini-shrink"
     noised_img_path = __SRC__ / f"{dataset_name}-{px}"
