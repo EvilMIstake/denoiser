@@ -45,7 +45,7 @@ class Cropper(dataset_noising.IMapper):
             patches_size,
             patches_size,
             patch_size,
-            patches_size,
+            patch_size,
             3
         )
 
