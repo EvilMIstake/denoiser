@@ -56,6 +56,39 @@ class _DatasetMixins:
         return img
 
     @staticmethod
+    def get_patches(image: torch.Tensor, width: int, height: int) -> \
+            tuple[list[torch.Tensor], list[tuple[int, int]]]:
+        # Add paddings to extract all patches
+        pad_x, pad_y = (
+            Config.patch_size - width % Config.stride,
+            Config.patch_size - height % Config.stride
+        )
+        image_padded = torch.nn.functional.pad(
+            image,
+            (0, pad_x, 0, pad_y),
+            mode="constant"
+        )
+
+        c, h, w = image_padded.shape
+
+        # Cutting overlapping patches
+        positions: list[tuple[int, int]] = [
+            (i, j)
+            for i in range(0, h - Config.patch_size + 1, Config.stride)
+            for j in range(0, w - Config.patch_size + 1, Config.stride)
+        ]
+        patches = [
+            image_padded[
+                :,
+                i:min(i + Config.patch_size, h),
+                j:min(j + Config.patch_size, w)
+            ]
+            for i, j in positions
+        ]
+
+        return patches, positions
+
+    @staticmethod
     def from_patches(patches: torch.Tensor,
                      positions: list[tuple[int, int]],
                      shape: tuple[int, int, int, int]) -> np.ndarray:
