@@ -21,6 +21,7 @@ class Config(metaclass=_ConfigMeta):
     image_width = patch_size << 2
     stride = (3 * patch_size) >> 2
 
+    num_workers: int = 8
     batch_size: int = 256
     num_layers: int = 17
     num_epochs: int = 2

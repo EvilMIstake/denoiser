@@ -1,15 +1,12 @@
 import datetime
 import pathlib
-import time
 from dataclasses import dataclass
 
 import torch
-import torchvision.utils
 from torch import nn
 import torch.optim as optim
 import numpy as np
 
-from matplotlib import pyplot as plt
 import cv2 as cv
 from tqdm import tqdm
 import pandas as pd
@@ -58,10 +55,10 @@ class Measurements:
 def _train(train_dataloader: utils.ToDeviceLoader,
            val_dataloader: utils.ToDeviceLoader,
            postfix: str,
-           parameters_path: pathlib.Path | None = None) -> None:
+           model_path: pathlib.Path | None = None) -> None:
     cnn = DnCNN(
         num_layers=nn_utils.Config.num_layers,
-        parameters_path=parameters_path
+        parameters_path=model_path
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
@@ -180,7 +177,9 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             img_denoised_stack = np.vstack(img_denoised)
             img = np.hstack((img_real_stack, img_noised_stack, img_denoised_stack))
 
+            # noinspection PyUnresolvedReferences
             img = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+            # noinspection PyUnresolvedReferences
             cv.imwrite("test.png", img)
 
         scheduler.step()
@@ -210,11 +209,11 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     )
 
 
-def _test(parameters_path: pathlib.Path,
+def _test(model_path: pathlib.Path,
           dataset: nn_utils.DnCnnDatasetTest) -> None:
     cnn = DnCNN(
         num_layers=nn_utils.Config.num_layers,
-        parameters_path=parameters_path
+        parameters_path=model_path
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
@@ -247,22 +246,27 @@ def _test(parameters_path: pathlib.Path,
         cv.imwrite("test.png", images)
 
 
-def train(tni_img_path: pathlib.Path,
-          tri_img_path: pathlib.Path,
-          vni_img_path: pathlib.Path,
-          vri_img_path: pathlib.Path,
-          postfix: str) -> None:
+def train(noised_image_path: pathlib.Path,
+          real_image_path: pathlib.Path,
+          postfix: str,
+          model_path: pathlib.Path | None) -> None:
     print("Preparing data...")
+
+    train_noised_img_path = noised_image_path / "train"
+    train_real_img_path = real_image_path / "train"
+    val_noised_img_path = noised_image_path / "val"
+    val_real_img_path = real_image_path / "val"
 
     # Prepare train data
     train_dataset = nn_utils.DnCnnDataset(
-        noised_data_path=tni_img_path,
-        cleaned_data_path=tri_img_path
+        noised_data_path=train_noised_img_path,
+        cleaned_data_path=train_real_img_path
     )
     train_dl = utils.ToDeviceLoader(
         torch.utils.data.DataLoader(
-            nn_utils.rearrange_dataset(train_dataset),
+            train_dataset,
             batch_size=nn_utils.Config.batch_size,
+            num_workers=nn_utils.Config.num_workers,
             shuffle=True,
             pin_memory=True,
             drop_last=True
@@ -272,37 +276,38 @@ def train(tni_img_path: pathlib.Path,
 
     # Prepare val data
     val_dataset = nn_utils.DnCnnDataset(
-        noised_data_path=vni_img_path,
-        cleaned_data_path=vri_img_path,
+        noised_data_path=val_noised_img_path,
+        cleaned_data_path=val_real_img_path,
     )
     val_dl = utils.ToDeviceLoader(
         torch.utils.data.DataLoader(
-            nn_utils.rearrange_dataset(val_dataset),
+            val_dataset,
             batch_size=nn_utils.Config.batch_size,
+            num_workers=nn_utils.Config.num_workers,
             pin_memory=True,
             drop_last=True
         ),
         _DEVICE
     )
 
-    # _TRAINING
+    # Training
     _train(
         train_dl,
         val_dl,
         postfix,
-        # parameters_path=__MODEL_STATES__ / "DnCNN" / "Model_add_17l_2025-04-24T144937" / "24_epoch.pth"
+        model_path
     )
 
 
 def test(test_path: pathlib.Path,
-         real_path: pathlib.Path) -> None:
-    mp = __MODEL_STATES__ / "DnCNN" / "Model_add_17l_2025-04-24T154925" / "24_epoch.pth"
+         real_path: pathlib.Path,
+         model_path: pathlib.Path) -> None:
     dataset = nn_utils.DnCnnDatasetTest(
         noised_data_path=test_path,
         cleaned_data_path=real_path
     )
     _test(
-        mp,
+        model_path,
         dataset
     )
 
@@ -310,27 +315,26 @@ def test(test_path: pathlib.Path,
 if __name__ == "__main__":
     # Postfix
     px = "add"
-
     dataset_name = f"imagenet-mini-shrink"
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}".strip("-")
-    real_img_path = __SRC__ / dataset_name
-
-    train_noised_img_path = noised_img_path / "train"
-    train_real_img_path = real_img_path / "train"
-    val_noised_img_path = noised_img_path / "val"
-    val_real_img_path = real_img_path / "val"
+    parameters_path = None
 
     # TRAINING
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}-p"
+    real_img_path = __SRC__ / f"{dataset_name}-p"
+
     train(
-        train_noised_img_path,
-        train_real_img_path,
-        val_noised_img_path,
-        val_real_img_path,
-        px
+        noised_img_path,
+        real_img_path,
+        px,
+        parameters_path
     )
 
     # TESTING
+    # noised_img_path = __SRC__ / f"{dataset_name}-{px}"
+    # real_img_path = __SRC__ / dataset_name
+    # parameters_path = __MODEL_STATES__ / ""
     # test(
     #     noised_img_path,
-    #     real_img_path
+    #     real_img_path,
+    #     parameters_path
     # )
