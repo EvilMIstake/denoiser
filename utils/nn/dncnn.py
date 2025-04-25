@@ -10,8 +10,8 @@ class DnCNN(nn.Module):
                  num_features=64,
                  parameters_path: pathlib.Path | None = None):
         assert num_layers > 2
-
         super().__init__()
+
         layers = [
             nn.Sequential(
                 nn.Conv2d(
@@ -20,7 +20,7 @@ class DnCNN(nn.Module):
                     kernel_size=3,
                     stride=1,
                     padding=1,
-                    # bias=False
+                    bias=True
                 ),
                 nn.ReLU(inplace=True)
             )
@@ -33,9 +33,9 @@ class DnCNN(nn.Module):
                         num_features,
                         kernel_size=3,
                         padding=1,
-                        # bias=False
+                        bias=False
                     ),
-                    nn.BatchNorm2d(num_features),
+                    nn.BatchNorm2d(num_features, eps=1e-4, momentum=0.95),
                     nn.ReLU(inplace=True)
                 )
             )
@@ -45,11 +45,9 @@ class DnCNN(nn.Module):
                 3,
                 kernel_size=3,
                 padding=1,
-                # bias=False
+                bias=False
             )
         )
-        # layers.append(nn.Sigmoid())
-
         self.layers = nn.Sequential(*layers)
 
         if parameters_path is None:

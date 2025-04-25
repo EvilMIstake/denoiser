@@ -18,14 +18,14 @@ class _ConfigMeta(type):
 class Config(metaclass=_ConfigMeta):
     r = 25
     patch_size = (r << 1) + 1
-    image_width = patch_size * 5
+    image_width = patch_size << 2
     stride = (3 * patch_size) >> 2
 
     batch_size: int = 256
     num_layers: int = 17
-    num_epochs: int = 1
-    learning_rate: float = 1e-4
-    weight_decay: float = 0.
+    num_epochs: int = 2
+    learning_rate: float = 1e-1
+    weight_decay: float = 1e-6
     save_step: int = 5
 
     @classmethod
@@ -84,18 +84,6 @@ class _DatasetMixins:
         return image_numpy
 
 
-class _DummyDataset(Dataset):
-    def __init__(self, data: list[tuple[torch.Tensor, torch.Tensor]]):
-        super(Dataset, self).__init__()
-        self.__data = data
-
-    def __len__(self) -> int:
-        return len(self.__data)
-
-    def __getitem__(self, item: int) -> tuple[torch.Tensor, torch.Tensor]:
-        return self.__data[item]
-
-
 class DnCnnDataset(Dataset, _DatasetMixins):
     def __init__(self,
                  noised_data_path: pathlib.Path,
@@ -107,29 +95,7 @@ class DnCnnDataset(Dataset, _DatasetMixins):
         assert len(self.__cleaned_data_paths) == len(self.__noised_data_paths), \
             "Datasets must be consistent"
 
-        self.__transforms = transforms.Compose(
-            [
-                transforms.Resize((Config.image_width, Config.image_width)),
-                transforms.ToTensor(),
-            ]
-        )
-
-    @staticmethod
-    def _get_patches(image: torch.Tensor) -> list[torch.Tensor]:
-        _, h, w = image.shape
-
-        # Cutting overlapping patches without using edges
-        patches = [
-            image[
-                :,
-                i:i + Config.patch_size,
-                j:j + Config.patch_size
-            ]
-            for i in range(0, h - Config.patch_size + 1, Config.stride)
-            for j in range(0, w - Config.patch_size + 1, Config.stride)
-        ]
-
-        return patches
+        self.__transform = transforms.ToTensor()
 
     def __len__(self) -> int:
         return len(self.__noised_data_paths)
@@ -140,18 +106,10 @@ class DnCnnDataset(Dataset, _DatasetMixins):
         img_c_raw = self._read_image(self.__cleaned_data_paths[item])
 
         # Apply transforms
-        img_n = self.__transforms(img_n_raw)
-        img_c = self.__transforms(img_c_raw)
+        img_n_tensor = self.__transform(img_n_raw)
+        img_c_tensor = self.__transform(img_c_raw)
 
-        # Extract patches
-        img_n_patches_list = self._get_patches(img_n)
-        img_c_patches_list = self._get_patches(img_c)
-
-        # Patches concat
-        img_n_patches_tensor = torch.stack(img_n_patches_list)
-        img_c_patches_tensor = torch.stack(img_c_patches_list)
-
-        return img_n_patches_tensor, img_c_patches_tensor
+        return img_n_tensor, img_c_tensor
 
 
 class DnCnnDatasetTest(Dataset, _DatasetMixins):
@@ -222,17 +180,3 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
         img_c = img_c.unsqueeze(0)
 
         return img_n_patches_tensor, img_n_patches_positions, img_c
-
-
-def rearrange_dataset(dataset: DnCnnDataset) -> Dataset:
-    noise_patches = []
-    clean_patches = []
-
-    for n_p, c_p in dataset:
-        noise_patches.extend(n_p)
-        clean_patches.extend(c_p)
-
-    new_pairs = list(zip(noise_patches, clean_patches))
-    new_dataset = _DummyDataset(new_pairs)
-
-    return new_dataset

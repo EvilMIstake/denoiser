@@ -4,89 +4,82 @@ import queue
 import random
 import pathlib
 import threading
-import dataclasses
-from typing import Generator
+from typing import (
+    Generator,
+    Iterable
+)
 from concurrent import futures
+from abc import ABC, abstractmethod
 
 import tqdm
 import cv2 as cv
-import numpy as np
 
-from utils.noise.utils import noiser
 from utils.utils import get_all_paths
+from utils.noise import data
 
 
-@dataclasses.dataclass
-class LoadData:
-    data: np.ndarray
-    name: pathlib.Path
+class IMapper(ABC):
+    @abstractmethod
+    def __call__(self, pipeline_data: data.LoadData) -> Iterable[data.LoadData]:
+        ...
 
 
 def generator(file_names: list[pathlib.Path],
-              generator_queue: queue.Queue[LoadData | None]) -> None:
-    for f_name in tqdm.tqdm(file_names, postfix=f"[PID] {os.getpid()}"):
+              generator_queue: queue.Queue[data.LoadData | None]) -> None:
+    for f_name in file_names:
         # noinspection PyUnresolvedReferences
         img = cv.imread(str(f_name))
         img_name = pathlib.Path(*f_name.parts[-2:])
-        data_container = LoadData(img, img_name)
+        data_container = data.LoadData(img, img_name)
         generator_queue.put_nowait(data_container)
 
     generator_queue.put_nowait(None)
 
 
-def processor(generator_queue: queue.Queue[LoadData | None],
-              receiver_queue: queue.Queue[LoadData | None],
-              left: int,
-              right: int) -> None:
-    """
-    :param generator_queue
-    :param receiver_queue
-    :param left: start of the range of noise classes
-    :param right: end of the range of noise classes
-    """
-
-    assert left <= right
-
+def processor(generator_queue: queue.Queue[data.LoadData | None],
+              receiver_queue: queue.Queue[data.LoadData | None],
+              mapper: IMapper) -> None:
     while True:
         data_container = generator_queue.get(block=True)
 
         if data_container is None:
             break
 
-        idx = random.randint(left, right)
-        noiser_ = noiser.get_noiser(data_container.data, idx)
-        data_container.data = noiser_.noised_image()
-        receiver_queue.put_nowait(data_container)
+        mapped_data = mapper(data_container)
+        for md in mapped_data:
+            receiver_queue.put_nowait(md)
 
     receiver_queue.put_nowait(None)
 
 
 def receiver(export_path: pathlib.Path,
-             receiver_queue: queue.Queue[LoadData | None]) -> None:
-    while True:
-        load_data = receiver_queue.get(block=True)
+             receiver_queue: queue.Queue[data.LoadData | None]) -> None:
+    with tqdm.tqdm(total=0, postfix=f"[PID] {os.getpid()}") as tqdm_:
+        while True:
+            load_data = receiver_queue.get(block=True)
 
-        if load_data is None:
-            break
+            if load_data is None:
+                break
 
-        img_name, img = load_data.name, load_data.data
-        img_path = export_path / img_name
+            img_name, img = load_data.name, load_data.data
+            img_path = export_path / img_name
 
-        dir_path = img_path.parent
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
+            dir_path = img_path.parent
+            if not dir_path.exists():
+                dir_path.mkdir(parents=True)
 
-        # noinspection PyUnresolvedReferences
-        cv.imwrite(
-            str(img_path),
-            load_data.data
-        )
+            # noinspection PyUnresolvedReferences
+            cv.imwrite(
+                str(img_path),
+                load_data.data
+            )
+
+            tqdm_.update(1)
 
 
 def worker(file_names: list[pathlib.Path],
            to: pathlib.Path,
-           left: int,
-           right: int) -> None:
+           mapper: IMapper) -> None:
     random.seed(os.getpid() * int(time.time()) % 31_415_926_535)
 
     g_queue = queue.Queue()
@@ -104,8 +97,7 @@ def worker(file_names: list[pathlib.Path],
         args=(
             g_queue,
             r_queue,
-            left,
-            right
+            mapper
         )
     )
     r_thread.start()
@@ -122,13 +114,12 @@ def worker(file_names: list[pathlib.Path],
 
 def dataset_process(from_: pathlib.Path,
                     to: pathlib.Path,
-                    left: int,
-                    right: int,
+                    mapper: IMapper,
                     part: slice | None = None,
                     num_workers: int = 8) -> None:
     def chunks_generator() -> Generator[list[pathlib.Path], None, None]:
         nonlocal num_workers
-        assert num_workers > 0, "Num workers must be non negative"
+        assert num_workers > 0, "Num workers must be positive integer"
 
         file_names = get_all_paths(from_)
 
@@ -155,8 +146,7 @@ def dataset_process(from_: pathlib.Path,
                 worker,
                 chunk,
                 to,
-                left,
-                right
+                mapper
             )
             for chunk in chunks_generator()
         ]

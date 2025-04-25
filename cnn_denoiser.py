@@ -1,12 +1,15 @@
 import datetime
 import pathlib
+import time
 from dataclasses import dataclass
 
 import torch
+import torchvision.utils
 from torch import nn
 import torch.optim as optim
 import numpy as np
 
+from matplotlib import pyplot as plt
 import cv2 as cv
 from tqdm import tqdm
 import pandas as pd
@@ -20,10 +23,17 @@ from utils import (
     __MODEL_STATES__
 )
 
-
-_SEED = 0
+_SEED = 1359140914
 _DEVICE = utils.get_device()
+
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 torch.manual_seed(_SEED)
+np.random.seed(_SEED)
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(_SEED)
+    torch.cuda.manual_seed_all(_SEED)
 
 
 @dataclass
@@ -61,9 +71,9 @@ def _train(train_dataloader: utils.ToDeviceLoader,
         lr=nn_utils.Config.learning_rate,
         weight_decay=nn_utils.Config.weight_decay
     )
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+    scheduler = optim.lr_scheduler.ExponentialLR(
         optimizer,
-        T_max=nn_utils.Config.num_epochs
+        gamma=0.97
     )
 
     states_path = pathlib.Path("model_states")
@@ -95,7 +105,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                 loss_train.backward()
                 optimizer.step()
 
-                numpy_predicted_batch = np.uint8(noised.cpu().numpy() * 255.)
+                numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
                 numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
                 # Add batch PSNR/LOSS values
@@ -120,11 +130,16 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             tqdm_.set_description(f"Val Epoch {epoch + 1}/{nn_utils.Config.num_epochs}")
 
             with torch.no_grad():
+                img_noised = []
+                img_denoised = []
+                img_real = []
+
                 for noised, real in val_dataloader:
                     prediction = cnn(noised)
                     loss_val = criterion(prediction, real)
 
-                    numpy_predicted_batch = np.uint8(noised.cpu().numpy() * 255.)
+                    numpy_noised_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
+                    numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
                     numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
                     # Add batch PSNR/LOSS values
@@ -134,11 +149,39 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                     )
                     total_loss_val += loss_val.item()
 
+                    # Save validation results
+                    img_real.extend(
+                        (
+                            numpy_real_batch[i].transpose(1, 2, 0)
+                            for i in range(0, len(noised), 4)
+                        )
+                    )
+                    img_denoised.extend(
+                        (
+                            numpy_predicted_batch[i].transpose(1, 2, 0)
+                            for i in range(0, len(noised), 4)
+                        )
+                    )
+                    img_noised.extend(
+                        (
+                            numpy_noised_batch[i].transpose(1, 2, 0)
+                            for i in range(0, len(noised), 4)
+                        )
+                    )
+
                     tqdm_.update(len(noised))
                     tqdm_.set_postfix_str(
                         f"LOSS: {total_loss_val/ n_val:.4f} | "
                         f"PSNR: {total_psnr_val / n_val: .2f}"
                     )
+
+            img_real_stack = np.vstack(img_real)
+            img_noised_stack = np.vstack(img_noised)
+            img_denoised_stack = np.vstack(img_denoised)
+            img = np.hstack((img_real_stack, img_noised_stack, img_denoised_stack))
+
+            img = cv.cvtColor(img, cv.COLOR_RGB2BGR)
+            cv.imwrite("test.png", img)
 
         scheduler.step()
 
@@ -176,7 +219,7 @@ def _test(parameters_path: pathlib.Path,
     cnn = utils.to_device(cnn, _DEVICE)
 
     cnn.eval()
-    n = 1400
+    n = 100
 
     with torch.no_grad():
         data = dataset[n]
@@ -214,7 +257,7 @@ def train(tni_img_path: pathlib.Path,
     # Prepare train data
     train_dataset = nn_utils.DnCnnDataset(
         noised_data_path=tni_img_path,
-        cleaned_data_path=tri_img_path,
+        cleaned_data_path=tri_img_path
     )
     train_dl = utils.ToDeviceLoader(
         torch.utils.data.DataLoader(
@@ -246,13 +289,14 @@ def train(tni_img_path: pathlib.Path,
     _train(
         train_dl,
         val_dl,
-        postfix
+        postfix,
+        # parameters_path=__MODEL_STATES__ / "DnCNN" / "Model_add_17l_2025-04-24T144937" / "24_epoch.pth"
     )
 
 
 def test(test_path: pathlib.Path,
          real_path: pathlib.Path) -> None:
-    mp = __MODEL_STATES__ / "DnCNN" / "Model_noised-add-impulse_17l_2025-04-24T112600" / "2450_epoch.pth"
+    mp = __MODEL_STATES__ / "DnCNN" / "Model_add_17l_2025-04-24T154925" / "24_epoch.pth"
     dataset = nn_utils.DnCnnDatasetTest(
         noised_data_path=test_path,
         cleaned_data_path=real_path
@@ -268,7 +312,7 @@ if __name__ == "__main__":
     px = "add"
 
     dataset_name = f"imagenet-mini-shrink"
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}"
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}".strip("-")
     real_img_path = __SRC__ / dataset_name
 
     train_noised_img_path = noised_img_path / "train"
