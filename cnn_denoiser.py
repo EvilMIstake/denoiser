@@ -237,7 +237,8 @@ def _test(model_path: pathlib.Path,
         noised_img_numpy = dataset.from_patches(
             noised_img_tensor,
             pos,
-            cleaned_img_tensor.shape
+            cleaned_img_tensor.shape,
+            clip=True
         )
         denoised_img_numpy = dataset.from_patches(
             denoised_img_tensor,
