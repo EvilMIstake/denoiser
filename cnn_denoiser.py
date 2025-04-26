@@ -62,7 +62,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
-    criterion = nn.MSELoss()
+    criterion = nn.MSELoss(reduction="sum")
     optimizer = optim.Adam(
         cnn.parameters(),
         lr=nn_utils.Config.learning_rate,
@@ -70,7 +70,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     )
     scheduler = optim.lr_scheduler.ExponentialLR(
         optimizer,
-        gamma=0.97
+        gamma=nn_utils.Config.gamma
     )
 
     states_path = pathlib.Path("model_states")
@@ -84,6 +84,8 @@ def _train(train_dataloader: utils.ToDeviceLoader,
         val_psnr=[],
         val_loss=[]
     )
+    measurements_path = current_states_path / "measurements.csv"
+
     n_test, n_val = len(train_dataloader), len(val_dataloader)
 
     for epoch in range(nn_utils.Config.num_epochs):
@@ -98,7 +100,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             for noised, real in train_dataloader:
                 optimizer.zero_grad()
                 prediction = cnn(noised)
-                loss_train = criterion(prediction, real)
+                loss_train = criterion(prediction, real) / (2. * len(noised))
                 loss_train.backward()
                 optimizer.step()
 
@@ -135,7 +137,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                     prediction = cnn(noised)
                     loss_val = criterion(prediction, real)
 
-                    numpy_noised_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
+                    numpy_noised_batch = np.uint8(noised.detach().cpu().numpy() * 255.)
                     numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
                     numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
@@ -175,7 +177,8 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             img_real_stack = np.vstack(img_real)
             img_noised_stack = np.vstack(img_noised)
             img_denoised_stack = np.vstack(img_denoised)
-            img = np.hstack((img_real_stack, img_noised_stack, img_denoised_stack))
+            img_noise_stack = img_noised_stack - img_denoised_stack
+            img = np.hstack((img_real_stack, img_noised_stack, img_denoised_stack, img_noise_stack))
 
             # noinspection PyUnresolvedReferences
             img = cv.cvtColor(img, cv.COLOR_RGB2BGR)
@@ -200,13 +203,12 @@ def _train(train_dataloader: utils.ToDeviceLoader,
         measurements.val_psnr.append(total_psnr_val)
         measurements.val_loss.append(total_loss_val)
 
-    measurements_path = current_states_path / "measurements.csv"
-    measurements_table = measurements.to_pandas()
-    measurements_table.to_csv(
-        measurements_path,
-        sep="\t",
-        index=False
-    )
+        measurements_table = measurements.to_pandas()
+        measurements_table.to_csv(
+            measurements_path,
+            sep="\t",
+            index=False
+        )
 
 
 def _test(model_path: pathlib.Path,
@@ -250,8 +252,6 @@ def train(noised_image_path: pathlib.Path,
           real_image_path: pathlib.Path,
           postfix: str,
           model_path: pathlib.Path | None) -> None:
-    print("Preparing data...")
-
     train_noised_img_path = noised_image_path / "train"
     train_real_img_path = real_image_path / "train"
     val_noised_img_path = noised_image_path / "val"

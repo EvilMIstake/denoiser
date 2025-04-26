@@ -21,11 +21,14 @@ class Config(metaclass=_ConfigMeta):
     image_width = patch_size << 2
     stride = (3 * patch_size) >> 2
 
-    num_workers: int = 8
+    # 1 for small, 4 for large
+    num_workers: int = 1
+    # ~Optimum
     batch_size: int = 256
-    num_layers: int = 17
-    num_epochs: int = 2
-    learning_rate: float = 1e-1
+    num_layers: int = 20
+    num_epochs: int = 3
+    learning_rate: float = 1e-4
+    gamma: float = 0.97
     weight_decay: float = 1e-6
     save_step: int = 5
 
