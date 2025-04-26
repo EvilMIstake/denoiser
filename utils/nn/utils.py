@@ -22,7 +22,7 @@ class Config(metaclass=_ConfigMeta):
     stride = (3 * patch_size) >> 2
 
     # 1 for small, 4 for large
-    num_workers: int = 1
+    num_workers: int = 2
     # ~Optimum
     batch_size: int = 256
     num_layers: int = 20

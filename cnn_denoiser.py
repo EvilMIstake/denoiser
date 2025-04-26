@@ -56,6 +56,9 @@ def _train(train_dataloader: utils.ToDeviceLoader,
            val_dataloader: utils.ToDeviceLoader,
            postfix: str,
            model_path: pathlib.Path | None = None) -> None:
+    def get_loss(predicted: torch.Tensor, prior: torch.Tensor) -> torch.Tensor:
+        return criterion(predicted, prior) / (2. * predicted.size()[0])
+
     cnn = DnCNN(
         num_layers=nn_utils.Config.num_layers,
         parameters_path=model_path
@@ -100,10 +103,12 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             for noised, real in train_dataloader:
                 optimizer.zero_grad()
                 prediction = cnn(noised)
-                loss_train = criterion(prediction, real) / (2. * len(noised))
+                loss_train = get_loss(prediction, real)
                 loss_train.backward()
                 optimizer.step()
 
+                # Evaluate results
+                cnn.eval()
                 numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
                 numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
@@ -135,7 +140,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
 
                 for noised, real in val_dataloader:
                     prediction = cnn(noised)
-                    loss_val = criterion(prediction, real)
+                    loss_val = get_loss(prediction, real)
 
                     numpy_noised_batch = np.uint8(noised.detach().cpu().numpy() * 255.)
                     numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)

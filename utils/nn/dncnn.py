@@ -12,39 +12,90 @@ class DnCNN(nn.Module):
         assert num_layers > 2
         super().__init__()
 
-        layers = [
-            nn.Sequential(
-                nn.Conv2d(
-                    3,
-                    num_features,
-                    kernel_size=3,
-                    stride=1,
-                    padding=1,
-                    bias=True
-                ),
-                nn.ReLU(inplace=True)
+        num_channels = 3
+        kernel_size = 3
+        padding = 1
+
+        # layers = [
+        #     nn.Sequential(
+        #         nn.Conv2d(
+        #             3,
+        #             num_features,
+        #             kernel_size=3,
+        #             stride=1,
+        #             padding=1,
+        #             bias=False
+        #         ),
+        #         nn.ReLU(inplace=True)
+        #     )
+        # ]
+        # for i in range(num_layers - 2):
+        #     layers.append(
+        #         nn.Sequential(
+        #             nn.Conv2d(
+        #                 num_features,
+        #                 num_features,
+        #                 kernel_size=3,
+        #                 padding=1,
+        #                 bias=False
+        #             ),
+        #             nn.BatchNorm2d(
+        #                 num_features,
+        #                 eps=1e-4,
+        #                 momentum=0.95
+        #             ),
+        #             nn.ReLU(inplace=True)
+        #         )
+        #     )
+        # layers.append(
+        #     nn.Conv2d(
+        #         num_features,
+        #         3,
+        #         kernel_size=3,
+        #         padding=1,
+        #         bias=False
+        #     )
+        # )
+
+        layers = []
+        layers.append(
+            nn.Conv2d(
+                num_channels,
+                num_features,
+                kernel_size=kernel_size,
+                padding=padding,
+                bias=False
             )
-        ]
-        for i in range(num_layers - 2):
+        )
+        layers.append(
+            nn.ReLU(inplace=True)
+        )
+        for _ in range(num_layers - 2):
             layers.append(
-                nn.Sequential(
-                    nn.Conv2d(
-                        num_features,
-                        num_features,
-                        kernel_size=3,
-                        padding=1,
-                        bias=False
-                    ),
-                    nn.BatchNorm2d(num_features, eps=1e-4, momentum=0.95),
-                    nn.ReLU(inplace=True)
+                nn.Conv2d(
+                    num_features,
+                    num_features,
+                    kernel_size=kernel_size,
+                    padding=padding,
+                    bias=False
                 )
+            )
+            layers.append(
+                nn.BatchNorm2d(
+                    num_features,
+                    eps=1e-4,
+                    momentum=0.95
+                )
+            )
+            layers.append(
+                nn.ReLU(inplace=True)
             )
         layers.append(
             nn.Conv2d(
                 num_features,
-                3,
-                kernel_size=3,
-                padding=1,
+                num_channels,
+                kernel_size=kernel_size,
+                padding=padding,
                 bias=False
             )
         )
