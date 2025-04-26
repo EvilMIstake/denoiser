@@ -57,7 +57,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
            postfix: str,
            model_path: pathlib.Path | None = None) -> None:
     def get_loss(predicted: torch.Tensor, prior: torch.Tensor) -> torch.Tensor:
-        return criterion(predicted, prior) / (2. * predicted.size()[0])
+        return criterion(predicted, prior) / (2. * len(predicted))
 
     cnn = DnCNN(
         num_layers=nn_utils.Config.num_layers,
@@ -65,7 +65,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
-    criterion = nn.MSELoss(reduction="sum")
+    criterion = nn.MSELoss(reduction="mean")
     optimizer = optim.Adam(
         cnn.parameters(),
         lr=nn_utils.Config.learning_rate,
@@ -94,7 +94,6 @@ def _train(train_dataloader: utils.ToDeviceLoader,
 
     for epoch in range(nn_utils.Config.num_epochs):
         # Train step
-        cnn.train()
         total_psnr_train = .0
         total_loss_train = .0
 
@@ -102,6 +101,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             tqdm_.set_description(f"Train Epoch {epoch + 1}/{nn_utils.Config.num_epochs}")
 
             for noised, real in train_dataloader:
+                cnn.train()
                 optimizer.zero_grad()
                 prediction = cnn(noised)
                 loss_train = get_loss(prediction, real)
@@ -127,7 +127,6 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                 )
 
         # Validation step
-        cnn.eval()
         total_psnr_val = .0
         total_loss_val = .0
 
@@ -324,23 +323,23 @@ if __name__ == "__main__":
     dataset_name = f"imagenet-mini-shrink"
 
     # TRAINING
-    # noised_img_path = __SRC__ / f"{dataset_name}-{px}-p"
-    # real_img_path = __SRC__ / f"{dataset_name}-p"
-    # parameters_path = None
-    #
-    # train(
-    #     noised_img_path,
-    #     real_img_path,
-    #     px,
-    #     parameters_path
-    # )
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}-p"
+    real_img_path = __SRC__ / f"{dataset_name}-p"
+    parameters_path = None
 
-    # TESTING
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}"
-    real_img_path = __SRC__ / dataset_name
-    parameters_path = __MODEL_STATES__ / "DnCNN/Model_add_20l_2025-04-26T214424/9_epoch.pth"
-    test(
+    train(
         noised_img_path,
         real_img_path,
+        px,
         parameters_path
     )
+
+    # TESTING
+    # noised_img_path = __SRC__ / f"{dataset_name}-{px}"
+    # real_img_path = __SRC__ / dataset_name
+    # parameters_path = __MODEL_STATES__ / "DnCNN/Model_add_20l_2025-04-26T214424/9_epoch.pth"
+    # test(
+    #     noised_img_path,
+    #     real_img_path,
+    #     parameters_path
+    # )
