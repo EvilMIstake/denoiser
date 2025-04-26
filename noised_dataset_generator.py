@@ -15,9 +15,9 @@ if __name__ == "__main__":
         nn_utils.Config.stride
     )
 
-    mode = "train"
-    i_path = __SRC__ / "imagenet-mini-noised" / mode
-    e_path = __SRC__ / "imagenet-mini-noised-p" / mode
+    mode = "val"
+    i_path = __SRC__ / "imagenet-mini-shrink-periodic" / mode
+    e_path = __SRC__ / "imagenet-mini-shrink-periodic-p" / mode
 
     num_workers = 8
     mapper = cropper

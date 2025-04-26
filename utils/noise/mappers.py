@@ -40,7 +40,7 @@ class Cropper(dataset_noising.IMapper):
         self.__patch_size = patch_size
         self.__stride = stride
 
-        patches_size = size // patch_size
+        patches_size = size // stride
         self.__patches_shape = (
             patches_size,
             patches_size,
