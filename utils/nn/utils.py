@@ -15,18 +15,19 @@ class _ConfigMeta(type):
         return f"{cls.__name__}({cls.__str__()})"
 
 
+# Dummy
 class Config(metaclass=_ConfigMeta):
     r = 25
     patch_size = (r << 1) + 1
     image_width = patch_size << 2
     stride = (3 * patch_size) >> 2
 
-    # 1 for small, 4 for large
+    # 1 for small, 4 for large datasets
     num_workers: int = 2
     # ~Optimum
     batch_size: int = 256
     num_layers: int = 20
-    num_epochs: int = 3
+    num_epochs: int = 10
     learning_rate: float = 1e-4
     gamma: float = 0.97
     weight_decay: float = 1e-6
@@ -95,7 +96,8 @@ class _DatasetMixins:
     @staticmethod
     def from_patches(patches: torch.Tensor,
                      positions: list[tuple[int, int]],
-                     shape: tuple[int, int, int, int]) -> np.ndarray:
+                     shape: tuple[int, int, int, int],
+                     clip: bool = False) -> np.ndarray:
         i, j = positions[-1]
         h, w = i + Config.patch_size, j + Config.patch_size
 
@@ -114,6 +116,9 @@ class _DatasetMixins:
             patch_count_mask
         )
         image /= patch_count_mask
+
+        if clip:
+            image = torch.clip(image, 0., 1.)
 
         _, _, h, w = shape
         image_numpy = _DatasetMixins.to_image(image)[:h, :w, :]
@@ -162,27 +167,6 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
 
         self.__transform = transforms.ToTensor()
 
-    @staticmethod
-    def _get_patches(image: torch.Tensor) -> tuple[list[torch.Tensor], list[tuple[int, int]]]:
-        c, h, w = image.shape
-
-        # Cutting overlapping patches without using edges (right/bottom)
-        positions: list[tuple[int, int]] = [
-            (i, j)
-            for i in range(0, h - Config.patch_size + 1, Config.stride)
-            for j in range(0, w - Config.patch_size + 1, Config.stride)
-        ]
-        patches = [
-            image[
-                :,
-                i:min(i + Config.patch_size, h),
-                j:min(j + Config.patch_size, w)
-            ]
-            for i, j in positions
-        ]
-
-        return patches, positions
-
     def __len__(self) -> int:
         return len(self.__noised_data_paths)
 
@@ -212,7 +196,7 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
             mode="constant"
         )
 
-        img_n_patches_list, img_n_patches_positions = self._get_patches(img_n)
+        img_n_patches_list, img_n_patches_positions = self.get_patches(img_n, *img_c_raw.size)
         img_n_patches_tensor = torch.stack(img_n_patches_list)
         img_c = img_c.unsqueeze(0)
 

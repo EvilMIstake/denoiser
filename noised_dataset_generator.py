@@ -5,7 +5,7 @@ from utils import __SRC__
 
 if __name__ == "__main__":
     # Noiser stuff
-    left, right = 5, 5
+    left, right = 1, 1
     noiser = mappers.Noiser(left, right)
 
     # Cropper stuff
@@ -15,9 +15,9 @@ if __name__ == "__main__":
         nn_utils.Config.stride
     )
 
-    mode = "val"
-    i_path = __SRC__ / "imagenet-mini-shrink-periodic" / mode
-    e_path = __SRC__ / "imagenet-mini-shrink-periodic-p" / mode
+    mode = "train"
+    i_path = __SRC__ / "imagenet-mini-shrink-uniform" / mode
+    e_path = __SRC__ / "imagenet-mini-shrink-uniform-p" / mode
 
     num_workers = 8
     mapper = cropper

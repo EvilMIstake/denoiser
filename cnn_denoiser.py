@@ -226,7 +226,7 @@ def _test(model_path: pathlib.Path,
     cnn = utils.to_device(cnn, _DEVICE)
 
     cnn.eval()
-    n = 100
+    n = 130
 
     with torch.no_grad():
         data = dataset[n]
@@ -322,25 +322,25 @@ if __name__ == "__main__":
     # Postfix
     px = "add"
     dataset_name = f"imagenet-mini-shrink"
-    parameters_path = None
 
     # TRAINING
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}-p"
-    real_img_path = __SRC__ / f"{dataset_name}-p"
-
-    train(
-        noised_img_path,
-        real_img_path,
-        px,
-        parameters_path
-    )
-
-    # TESTING
-    # noised_img_path = __SRC__ / f"{dataset_name}-{px}"
-    # real_img_path = __SRC__ / dataset_name
-    # parameters_path = __MODEL_STATES__ / ""
-    # test(
+    # noised_img_path = __SRC__ / f"{dataset_name}-{px}-p"
+    # real_img_path = __SRC__ / f"{dataset_name}-p"
+    # parameters_path = None
+    #
+    # train(
     #     noised_img_path,
     #     real_img_path,
+    #     px,
     #     parameters_path
     # )
+
+    # TESTING
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}"
+    real_img_path = __SRC__ / dataset_name
+    parameters_path = __MODEL_STATES__ / "DnCNN/Model_add_20l_2025-04-26T214424/9_epoch.pth"
+    test(
+        noised_img_path,
+        real_img_path,
+        parameters_path
+    )
