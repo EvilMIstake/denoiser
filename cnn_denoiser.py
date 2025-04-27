@@ -65,7 +65,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
-    criterion = nn.MSELoss(reduction="mean")
+    criterion = nn.MSELoss(reduction="sum")
     optimizer = optim.Adam(
         cnn.parameters(),
         lr=nn_utils.Config.learning_rate,
@@ -94,6 +94,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
 
     for epoch in range(nn_utils.Config.num_epochs):
         # Train step
+        cnn.train()
         total_psnr_train = .0
         total_loss_train = .0
 
@@ -101,7 +102,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             tqdm_.set_description(f"Train Epoch {epoch + 1}/{nn_utils.Config.num_epochs}")
 
             for noised, real in train_dataloader:
-                cnn.train()
+
                 optimizer.zero_grad()
                 prediction = cnn(noised)
                 loss_train = get_loss(prediction, real)
@@ -109,7 +110,6 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                 optimizer.step()
 
                 # Evaluate results
-                cnn.eval()
                 numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
                 numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
@@ -127,6 +127,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                 )
 
         # Validation step
+        cnn.eval()
         total_psnr_val = .0
         total_loss_val = .0
 
