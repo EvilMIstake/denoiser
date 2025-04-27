@@ -5,7 +5,7 @@ import cv2 as cv
 import numpy as np
 
 from utils.noise import data, dataset_noising
-from utils.noise.utils import noiser as noiser_
+from utils.noise.noise import noiser as noiser_
 
 
 class Noiser(dataset_noising.IMapper):

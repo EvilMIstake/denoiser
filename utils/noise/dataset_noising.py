@@ -11,6 +11,7 @@ from typing import (
 from concurrent import futures
 from abc import ABC, abstractmethod
 
+import numpy as np
 import tqdm
 import cv2 as cv
 
@@ -24,11 +25,17 @@ class IMapper(ABC):
         ...
 
 
+class IReader(ABC):
+    @abstractmethod
+    def read_image(self, path: pathlib.Path) -> np.ndarray:
+        ...
+
+
 def generator(file_names: list[pathlib.Path],
-              generator_queue: queue.Queue[data.LoadData | None]) -> None:
+              generator_queue: queue.Queue[data.LoadData | None],
+              reader: IReader) -> None:
     for f_name in file_names:
-        # noinspection PyUnresolvedReferences
-        img = cv.imread(str(f_name))
+        img = reader.read_image(f_name)
         img_name = pathlib.Path(*f_name.parts[-2:])
         data_container = data.LoadData(img, img_name)
         generator_queue.put_nowait(data_container)
@@ -79,7 +86,8 @@ def receiver(export_path: pathlib.Path,
 
 def worker(file_names: list[pathlib.Path],
            to: pathlib.Path,
-           mapper: IMapper) -> None:
+           mapper: IMapper,
+           reader: IReader) -> None:
     random.seed(os.getpid() * int(time.time()) % 31_415_926_535)
 
     g_queue = queue.Queue()
@@ -105,7 +113,8 @@ def worker(file_names: list[pathlib.Path],
 
     generator(
         file_names,
-        g_queue
+        g_queue,
+        reader
     )
 
     r_thread.join()
@@ -115,6 +124,7 @@ def worker(file_names: list[pathlib.Path],
 def dataset_process(from_: pathlib.Path,
                     to: pathlib.Path,
                     mapper: IMapper,
+                    reader: IReader,
                     part: slice | None = None,
                     num_workers: int = 8) -> None:
     def chunks_generator() -> Generator[list[pathlib.Path], None, None]:
@@ -146,7 +156,8 @@ def dataset_process(from_: pathlib.Path,
                 worker,
                 chunk,
                 to,
-                mapper
+                mapper,
+                reader
             )
             for chunk in chunks_generator()
         ]

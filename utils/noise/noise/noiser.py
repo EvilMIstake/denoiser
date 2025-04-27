@@ -3,7 +3,7 @@ from random import random, randint
 
 import numpy as np
 
-from utils.noise.utils import noise
+from utils.noise.noise import noise
 
 
 class IRandomNoiser(ABC):

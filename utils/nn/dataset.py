@@ -1,59 +1,26 @@
+from abc import ABC, abstractmethod
 import pathlib
 
 import numpy as np
-from PIL import Image
 
 import torch
 from torchvision.transforms import transforms
 from torch.utils.data import Dataset
 
 from utils.utils import get_all_paths, get_device
+from utils.nn import config
 
 
-class _ConfigMeta(type):
-    def __str__(cls) -> str:
-        return f"{cls.__name__}({cls.__str__()})"
-
-
-# Dummy
-class Config(metaclass=_ConfigMeta):
-    r = 25
-    patch_size = (r << 1) + 1
-    image_width = patch_size << 2
-    stride = (3 * patch_size) >> 2
-
-    # 1 for small, 4 for large datasets
-    num_workers: int = 2
-    # ~Optimum
-    batch_size: int = 256
-    num_layers: int = 20
-    num_epochs: int = 100
-    learning_rate: float = 1e-2
-    gamma: float = 0.97
-    weight_decay: float = 1e-8
-    save_step: int = 5
-
-    @classmethod
-    def __str__(cls) -> str:
-        return f"\n\t" \
-               f"{cls.patch_size=}, \n\t" \
-               f"{cls.image_width=}, \n\t" \
-               f"{cls.stride=}, \n\t" \
-               f"{cls.batch_size=}, \n\t" \
-               f"{cls.num_layers=}, \n\t" \
-               f"{cls.num_epochs=}, \n\t" \
-               f"{cls.learning_rate=}, \n\t" \
-               f"{cls.weight_decay=}\n"
+class IReader(ABC):
+    @abstractmethod
+    def read_image(self, path: pathlib.Path) -> np.ndarray:
+        ...
 
 
 class _DatasetMixins:
     @staticmethod
     def _get_all_paths(path: pathlib.Path) -> list[pathlib.Path]:
         return get_all_paths(path)
-
-    @staticmethod
-    def _read_image(path: pathlib.Path) -> Image.Image:
-        return Image.open(path).convert("RGB")
 
     @staticmethod
     def to_image(image: torch.Tensor) -> np.ndarray:
@@ -65,8 +32,8 @@ class _DatasetMixins:
             tuple[list[torch.Tensor], list[tuple[int, int]]]:
         # Add paddings to extract all patches
         pad_x, pad_y = (
-            Config.patch_size - width % Config.stride,
-            Config.patch_size - height % Config.stride
+            config.Config.patch_size - width % config.Config.stride,
+            config.Config.patch_size - height % config.Config.stride
         )
         image_padded = torch.nn.functional.pad(
             image,
@@ -79,14 +46,14 @@ class _DatasetMixins:
         # Cutting overlapping patches
         positions: list[tuple[int, int]] = [
             (i, j)
-            for i in range(0, h - Config.patch_size + 1, Config.stride)
-            for j in range(0, w - Config.patch_size + 1, Config.stride)
+            for i in range(0, h - config.Config.patch_size + 1, config.Config.stride)
+            for j in range(0, w - config.Config.patch_size + 1, config.Config.stride)
         ]
         patches = [
             image_padded[
                 :,
-                i:min(i + Config.patch_size, h),
-                j:min(j + Config.patch_size, w)
+                i:min(i + config.Config.patch_size, h),
+                j:min(j + config.Config.patch_size, w)
             ]
             for i, j in positions
         ]
@@ -99,15 +66,15 @@ class _DatasetMixins:
                      shape: tuple[int, int, int, int],
                      clip: bool = False) -> np.ndarray:
         i, j = positions[-1]
-        h, w = i + Config.patch_size, j + Config.patch_size
+        h, w = i + config.Config.patch_size, j + config.Config.patch_size
 
         device = get_device()
         image = torch.zeros((1, 3, h, w), device=device)
         patch_count_mask = torch.zeros((1, 1, h, w), device=device)
 
         for (i, j), p in zip(positions, patches):
-            image[:, :, i:i + Config.patch_size, j:j + Config.patch_size] += p
-            patch_count_mask[:, :, i:i + Config.patch_size, j:j + Config.patch_size] += 1
+            image[:, :, i:i + config.Config.patch_size, j:j + config.Config.patch_size] += p
+            patch_count_mask[:, :, i:i + config.Config.patch_size, j:j + config.Config.patch_size] += 1
 
         # Preventing division by zero
         patch_count_mask = torch.where(
@@ -129,7 +96,8 @@ class _DatasetMixins:
 class DnCnnDataset(Dataset, _DatasetMixins):
     def __init__(self,
                  noised_data_path: pathlib.Path,
-                 cleaned_data_path: pathlib.Path):
+                 cleaned_data_path: pathlib.Path,
+                 reader: IReader):
         super(Dataset, self).__init__()
         self.__noised_data_paths = self._get_all_paths(noised_data_path)
         self.__cleaned_data_paths = self._get_all_paths(cleaned_data_path)
@@ -138,14 +106,15 @@ class DnCnnDataset(Dataset, _DatasetMixins):
             "Datasets must be consistent"
 
         self.__transform = transforms.ToTensor()
+        self.__reader = reader
 
     def __len__(self) -> int:
         return len(self.__noised_data_paths)
 
     def __getitem__(self, item: int) -> tuple[torch.Tensor, torch.Tensor]:
         # Read images
-        img_n_raw = self._read_image(self.__noised_data_paths[item])
-        img_c_raw = self._read_image(self.__cleaned_data_paths[item])
+        img_n_raw = self.__reader.read_image(self.__noised_data_paths[item])
+        img_c_raw = self.__reader.read_image(self.__cleaned_data_paths[item])
 
         # Apply transforms
         img_n_tensor = self.__transform(img_n_raw)
@@ -157,7 +126,8 @@ class DnCnnDataset(Dataset, _DatasetMixins):
 class DnCnnDatasetTest(Dataset, _DatasetMixins):
     def __init__(self,
                  noised_data_path: pathlib.Path,
-                 cleaned_data_path: pathlib.Path):
+                 cleaned_data_path: pathlib.Path,
+                 reader: IReader):
         super(Dataset, self).__init__()
         self.__noised_data_paths = self._get_all_paths(noised_data_path)
         self.__cleaned_data_paths = self._get_all_paths(cleaned_data_path)
@@ -166,6 +136,7 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
             "Datasets must be consistent"
 
         self.__transform = transforms.ToTensor()
+        self.__reader = reader
 
     def __len__(self) -> int:
         return len(self.__noised_data_paths)
@@ -177,8 +148,8 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
                 torch.Tensor
             ]:
         # Read images
-        img_n_raw = self._read_image(self.__noised_data_paths[item])
-        img_c_raw = self._read_image(self.__cleaned_data_paths[item])
+        img_n_raw = self.__reader.read_image(self.__noised_data_paths[item])
+        img_c_raw = self.__reader.read_image(self.__cleaned_data_paths[item])
         x, y = img_n_raw.size
 
         # Convert images to tensor
@@ -187,8 +158,8 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
 
         # Extract patches from noised image
         pad_x, pad_y = (
-            Config.patch_size - x % Config.stride,
-            Config.patch_size - y % Config.stride
+            config.Config.patch_size - x % config.Config.stride,
+            config.Config.patch_size - y % config.Config.stride
         )
         img_n = torch.nn.functional.pad(
             img_n,

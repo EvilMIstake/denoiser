@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 
-from utils.noise.utils import noise_samples
+from utils.noise.noise import noise_samples
 
 
 def add_gaussian_noise(image: np.ndarray, mean: float, sigma: float) -> np.ndarray:
