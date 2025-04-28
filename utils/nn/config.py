@@ -15,11 +15,11 @@ class Config(metaclass=_ConfigMeta):
     # ~Optimum
     batch_size: int = 256
     num_layers: int = 20
-    num_epochs: int = 100
+    num_epochs: int = 1
     learning_rate: float = 1e-2
     gamma: float = 0.97
     weight_decay: float = 1e-8
-    save_step: int = 5
+    save_threshold: int = 21.
 
     @classmethod
     def __str__(cls) -> str:

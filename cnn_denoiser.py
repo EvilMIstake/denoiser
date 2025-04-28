@@ -197,16 +197,16 @@ def _train(train_dataloader: utils.ToDeviceLoader,
 
         scheduler.step()
 
-        # Extract model
-        if (epoch + 1) % config.Config.save_step == 0:
-            state_path = current_states_path / f"{epoch}_epoch.pth"
-            torch.save(cnn.state_dict(), state_path)
-
         # Save metrics
         total_psnr_train /= n_test
         total_loss_train /= n_test
         total_psnr_val /= n_val
         total_loss_val /= n_val
+
+        # Extract model
+        if total_psnr_val > config.Config.save_threshold:
+            state_path = current_states_path / f"{epoch}_epoch.pth"
+            torch.save(cnn.state_dict(), state_path)
 
         measurements.train_loss.append(total_loss_train)
         measurements.train_psnr.append(total_psnr_train)
@@ -333,8 +333,8 @@ if __name__ == "__main__":
     dataset_name = f"BSDS500"
 
     # TRAINING
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}-p"
-    real_img_path = __SRC__ / f"{dataset_name}-p"
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}-pf"
+    real_img_path = __SRC__ / f"{dataset_name}-pf"
     parameters_path = None
 
     train(
