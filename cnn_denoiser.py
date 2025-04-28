@@ -94,7 +94,6 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     measurements_path = current_states_path / "measurements.csv"
 
     n_test, n_val = len(train_dataloader), len(val_dataloader)
-    validation_extraction_step = 50
 
     for epoch in range(config.Config.num_epochs):
         # Train step
@@ -162,19 +161,19 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                     img_real.extend(
                         (
                             numpy_real_batch[i].transpose(1, 2, 0)
-                            for i in range(0, len(noised), validation_extraction_step)
+                            for i in range(0, len(noised), config.Config.validation_img_extraction_step)
                         )
                     )
                     img_denoised.extend(
                         (
                             numpy_predicted_batch[i].transpose(1, 2, 0)
-                            for i in range(0, len(noised), validation_extraction_step)
+                            for i in range(0, len(noised), config.Config.validation_img_extraction_step)
                         )
                     )
                     img_noised.extend(
                         (
                             numpy_noised_batch[i].transpose(1, 2, 0)
-                            for i in range(0, len(noised), validation_extraction_step)
+                            for i in range(0, len(noised), config.Config.validation_img_extraction_step)
                         )
                     )
 
