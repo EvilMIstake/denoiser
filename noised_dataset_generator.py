@@ -19,12 +19,15 @@ if __name__ == "__main__":
         config.Config.stride
     )
 
-    mode = ""
-    i_path = __SRC__ / "BSDS500" / mode
-    e_path = __SRC__ / "BSDS500-p" / mode
+    # Flipper stuff
+    flipper = mappers.Flipper()
 
-    num_workers = 6
-    mapper = cropper
+    mode = ""
+    i_path = __SRC__ / "BSDS500-periodic-p" / mode
+    e_path = __SRC__ / "BSDS500-periodic-pf" / mode
+
+    num_workers = 4
+    mapper = flipper
     reader = readers.CVReader()
     part = None
 

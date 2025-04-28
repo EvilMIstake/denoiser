@@ -82,3 +82,30 @@ class Cropper(dataset_noising.IMapper):
         )
 
         return processed_data
+
+
+class Flipper(dataset_noising.IMapper):
+    def __call__(self, pipeline_data: data.LoadData) -> Iterable[data.LoadData]:
+        image = pipeline_data.data
+        img_path = pipeline_data.name
+        root_img, img_name, img_ext = img_path.parent, img_path.stem, img_path.suffix
+
+        image_flip_horizontal = np.fliplr(image)
+        image_flip_vertical = np.flipud(image)
+
+        processed_data = (
+            data.LoadData(
+                data=image,
+                name=root_img / f"{img_name}0{img_ext}"
+            ),
+            data.LoadData(
+                data=image_flip_horizontal,
+                name=root_img / f"{img_name}1{img_ext}"
+            ),
+            data.LoadData(
+                data=image_flip_vertical,
+                name=root_img / f"{img_name}2{img_ext}"
+            )
+        )
+
+        return processed_data

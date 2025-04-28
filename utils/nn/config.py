@@ -10,7 +10,7 @@ class Config(metaclass=_ConfigMeta):
     image_width = patch_size << 3
     stride = (3 * patch_size) >> 2
 
-    # 1 for small, 4 for large datasets
+    # 2 for small, 4 for large datasets
     num_workers: int = 2
     # ~Optimum
     batch_size: int = 256
