@@ -2,13 +2,13 @@ import math
 import numpy as np
 
 
-def gaussian_noise(shape: tuple[int, int, ...], mean: float, sigma: float) -> np.ndarray:
-    gauss = np.random.normal(mean, sigma, shape).astype("uint8")
+def gaussian_noise(shape: tuple[int, int, ...], noise_level: float) -> np.ndarray[np.uint8]:
+    gauss = (np.random.normal(size=shape) * noise_level).astype("uint8")
     return gauss
 
 
-def uniform_noise(shape: tuple[int, int, ...], low: float, high: float) -> np.ndarray:
-    uniform = np.random.uniform(low, high, shape).astype("uint8")
+def uniform_noise(shape: tuple[int, int, ...], noise_level: float) -> np.ndarray[np.uint8]:
+    uniform = (np.random.uniform(-1, 1, size=shape) * noise_level).astype("uint8")
     return uniform
 
 

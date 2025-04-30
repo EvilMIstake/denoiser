@@ -61,7 +61,9 @@ def _train(train_dataloader: utils.ToDeviceLoader,
            postfix: str,
            model_path: pathlib.Path | None = None) -> None:
     def get_loss(predicted: torch.Tensor, prior: torch.Tensor) -> torch.Tensor:
-        return criterion(predicted, prior) / (2. * len(predicted))
+        loss = criterion(predicted, prior)
+        loss.div_(2.)
+        return loss
 
     cnn = DnCNN(
         num_layers=config.Config.num_layers,
@@ -75,8 +77,9 @@ def _train(train_dataloader: utils.ToDeviceLoader,
         lr=config.Config.learning_rate,
         weight_decay=config.Config.weight_decay
     )
-    scheduler = optim.lr_scheduler.ExponentialLR(
+    scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer,
+        milestones=[30, 60, 90, 120],
         gamma=config.Config.gamma
     )
 
@@ -121,7 +124,8 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                     numpy_predicted_batch,
                     numpy_real_batch
                 )
-                total_loss_train += loss_train.item()
+                # Add mean batch loss
+                total_loss_train += loss_train.item() / len(noised)
 
                 tqdm_.update(len(noised))
                 tqdm_.set_postfix_str(
@@ -146,7 +150,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                     prediction = cnn(noised)
                     loss_val = get_loss(prediction, real)
 
-                    numpy_noised_batch = np.uint8(noised.detach().cpu().numpy() * 255.)
+                    numpy_noised_batch = np.uint8(noised.cpu().numpy() * 255.)
                     numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
                     numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
@@ -155,7 +159,8 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                         numpy_predicted_batch,
                         numpy_real_batch
                     )
-                    total_loss_val += loss_val.item()
+                    # Add mean batch loss
+                    total_loss_val += loss_val.item() / len(noised)
 
                     # Save validation results
                     img_real.extend(
@@ -334,6 +339,7 @@ if __name__ == "__main__":
     # TRAINING
     noised_img_path = __SRC__ / f"{dataset_name}-{px}-pf"
     real_img_path = __SRC__ / f"{dataset_name}-pf"
+    # parameters_path = __MODEL_STATES__ / "DnCNN" / ""
     parameters_path = None
 
     train(

@@ -13,12 +13,12 @@ class Config(metaclass=_ConfigMeta):
     # 2 for small, 4 for large datasets
     num_workers: int = 2
     # ~Optimum
-    batch_size: int = 256
+    batch_size: int = 300
     num_layers: int = 20
-    num_epochs: int = 100
-    learning_rate: float = 1e-1
-    gamma: float = 0.93325
-    weight_decay: float = 1e-8
+    num_epochs: int = 150
+    learning_rate: float = 1e-3
+    gamma: float = 0.3
+    weight_decay: float = 1e-6
     save_threshold: int = 21.
     validation_img_extraction_step: int = 500
 

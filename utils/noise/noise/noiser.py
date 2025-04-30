@@ -15,14 +15,12 @@ class IRandomNoiser(ABC):
 class GaussianNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__mean = random() * 60 + 20
-        self.__sigma = random() * 14.5 + 5.5
+        self.__noise_level = random() * 50.
 
     def noised_image(self) -> np.ndarray:
         noised_img = noise.add_gaussian_noise(
             self.__image,
-            self.__mean,
-            self.__sigma
+            self.__noise_level
         )
         return noised_img
 
@@ -30,14 +28,12 @@ class GaussianNoiser(IRandomNoiser):
 class UniformNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__low = 10
-        self.__high = 60
+        self.__noise_level = random() * 50.
 
     def noised_image(self) -> np.ndarray:
         noised_img = noise.add_uniform_noise(
             self.__image,
-            self.__low,
-            self.__high
+            self.__noise_level
         )
         return noised_img
 

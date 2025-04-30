@@ -23,7 +23,7 @@ class DnCNN(nn.Module):
                     num_features,
                     kernel_size=kernel_size,
                     padding=padding,
-                    bias=False
+                    bias=True
                 ),
                 nn.ReLU(inplace=True)
             )
@@ -60,12 +60,11 @@ class DnCNN(nn.Module):
         if parameters_path is None:
             self._initialize_weights()
         else:
-            self.load_state_dict(
-                torch.load(
-                    parameters_path,
-                    weights_only=False
-                )
+            model = torch.load(
+                parameters_path,
+                weights_only=False
             )
+            self.load_state_dict(model)
 
     def _initialize_weights(self) -> None:
         for m in self.modules():

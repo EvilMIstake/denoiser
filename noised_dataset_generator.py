@@ -9,7 +9,7 @@ from utils import __SRC__
 
 if __name__ == "__main__":
     # Noiser stuff
-    left, right = 0, 1
+    left, right = 0, 5
     noiser = mappers.Noiser(left, right)
 
     # Cropper stuff
@@ -23,11 +23,11 @@ if __name__ == "__main__":
     flipper = mappers.Flipper()
 
     mode = ""
-    i_path = __SRC__ / "BSDS500-periodic-p" / mode
-    e_path = __SRC__ / "BSDS500-periodic-pf" / mode
+    i_path = __SRC__ / "imagenet-mini" / mode
+    e_path = __SRC__ / "imagenet-mini-noised" / mode
 
-    num_workers = 4
-    mapper = flipper
+    num_workers = 8
+    mapper = noiser
     reader = readers.CVReader()
     part = None
 
