@@ -15,12 +15,13 @@ class IRandomNoiser(ABC):
 class GaussianNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__noise_level = random() * 50.
+        self.__noise_level = 50
 
     def noised_image(self) -> np.ndarray:
+        noise_level = random() * self.__noise_level
         noised_img = noise.add_gaussian_noise(
             self.__image,
-            self.__noise_level
+            noise_level
         )
         return noised_img
 
@@ -28,12 +29,13 @@ class GaussianNoiser(IRandomNoiser):
 class UniformNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__noise_level = random() * 50.
+        self.__noise_level = 50
 
     def noised_image(self) -> np.ndarray:
+        noise_level = random() * self.__noise_level
         noised_img = noise.add_uniform_noise(
             self.__image,
-            self.__noise_level
+            noise_level
         )
         return noised_img
 
@@ -41,12 +43,13 @@ class UniformNoiser(IRandomNoiser):
 class SaltNPaperNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__prob = random() * 0.1 + 0.15
+        self.__prob_a, self.__prob_b = 0.1, 0.15
 
     def noised_image(self) -> np.ndarray:
+        prob = random() * self.__prob_a + self.__prob_b
         noised_img = noise.add_salt_pepper_noise(
             self.__image,
-            self.__prob
+            prob
         )
         return noised_img
 
@@ -54,14 +57,16 @@ class SaltNPaperNoiser(IRandomNoiser):
 class MotionBlurNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__size = (randint(3, 15) << 1) + 1
-        self.__vertical = bool(randint(0, 1))
+        self.__h_min, self.__h_max = 3, 15
 
     def noised_image(self) -> np.ndarray:
+        size = (randint(self.__h_min, self.__h_max) << 1) + 1
+        vertical = bool(randint(0, 1))
+
         noised_img = noise.add_motion_blur(
             self.__image,
-            self.__size,
-            self.__vertical
+            size,
+            vertical
         )
         return noised_img
 
@@ -69,12 +74,14 @@ class MotionBlurNoiser(IRandomNoiser):
 class DeFocusBlurNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__size = (randint(3, 15) << 1) + 1
+        self.__h_min, self.__h_max = 3, 15
 
     def noised_image(self) -> np.ndarray:
+        size = (randint(self.__h_min, self.__h_max) << 1) + 1
+
         noised_img = noise.add_defocus_blur(
             self.__image,
-            self.__size
+            size
         )
         return noised_img
 
@@ -82,18 +89,22 @@ class DeFocusBlurNoiser(IRandomNoiser):
 class PeriodicNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__amplitude = randint(25, 70)
-        self.__period = randint(5, 15)
-        self.__offset = randint(5, 10)
-        self.__vertical = bool(randint(0, 1))
+        self.__a_min, self.__a_max = 25, 70
+        self.__p_min, self.__p_max = 5, 15
+        self.__o_min, self.__o_max = 5, 10
 
     def noised_image(self) -> np.ndarray:
+        amplitude = randint(self.__a_min, self.__a_max)
+        period = randint(self.__p_min, self.__p_max)
+        offset = randint(self.__o_min, self.__o_max)
+        vertical = bool(randint(0, 1))
+
         noised_img = noise.add_periodic_noise(
             self.__image,
-            self.__amplitude,
-            self.__period,
-            self.__offset,
-            self.__vertical
+            amplitude,
+            period,
+            offset,
+            vertical
         )
         return noised_img
 

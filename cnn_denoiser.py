@@ -79,7 +79,10 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     )
     scheduler = optim.lr_scheduler.MultiStepLR(
         optimizer,
-        milestones=[30, 60, 90, 120],
+        milestones=[
+            config.Config.milestone * i
+            for i in range(1, config.Config.num_epochs // config.Config.milestone)
+        ],
         gamma=config.Config.gamma
     )
 
@@ -336,11 +339,11 @@ if __name__ == "__main__":
     px = "add"
     dataset_name = f"BSDS500"
 
-    # TRAINING
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}-pf"
-    real_img_path = __SRC__ / f"{dataset_name}-pf"
-    # parameters_path = __MODEL_STATES__ / "DnCNN" / ""
-    parameters_path = None
+    # Training
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
+    real_img_path = __SRC__ / f"{dataset_name}-pfr"
+    parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T001614" / "141_epoch.pth"
+    # parameters_path = None
 
     train(
         noised_img_path,

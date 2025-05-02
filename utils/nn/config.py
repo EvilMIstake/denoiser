@@ -10,15 +10,16 @@ class Config(metaclass=_ConfigMeta):
     image_width = patch_size << 3
     stride = (3 * patch_size) >> 2
 
-    # 2 for small, 4 for large datasets
+    # 1 for small, 4 for large datasets
     num_workers: int = 2
     # ~Optimum
-    batch_size: int = 300
+    batch_size: int = 400
     num_layers: int = 20
-    num_epochs: int = 150
+    num_epochs: int = 50
     learning_rate: float = 1e-3
-    gamma: float = 0.3
-    weight_decay: float = 1e-6
+    gamma: float = 0.25
+    milestone: int = 15
+    weight_decay: float = 0.
     save_threshold: int = 21.
     validation_img_extraction_step: int = 500
 

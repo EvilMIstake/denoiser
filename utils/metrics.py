@@ -38,6 +38,7 @@ def peak_signal_to_noise_ratio(img_prior: np.ndarray, img_predicted: np.ndarray)
     выражается как логарифмическая величина (с использованием
     шкалы децибел)
     """
+
     max_i = 255.
     mse_ = mse(img_prior, img_predicted)
     metric = 20. * np.log10(max_i) - 10. * np.log10(mse_)
