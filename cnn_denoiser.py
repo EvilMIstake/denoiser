@@ -237,29 +237,22 @@ def _test(model_path: pathlib.Path,
     cnn = utils.to_device(cnn, _DEVICE)
 
     cnn.eval()
-    n = 50
+    n = 100
 
     with torch.no_grad():
         data = dataset_[n]
-        noised_img_tensor, pos, cleaned_img_tensor = data
+        noised_img_tensor, cleaned_img_tensor = data
         noised_img_tensor = utils.to_device(noised_img_tensor, _DEVICE)
+        t = noised_img_tensor.view(1, -1, *noised_img_tensor.shape[1:3])
 
-        denoised_img_tensor = cnn(noised_img_tensor)
+        denoised_img_tensor = cnn(t)
         cleaned_img_numpy = dataset_.to_image(cleaned_img_tensor)
-        noised_img_numpy = dataset_.from_patches(
-            noised_img_tensor,
-            pos,
-            cleaned_img_tensor.shape,
-            clip=True
-        )
-        denoised_img_numpy = dataset_.from_patches(
-            denoised_img_tensor,
-            pos,
-            cleaned_img_tensor.shape,
-            clip=True
-        )
-
+        noised_img_numpy = dataset_.to_image(noised_img_tensor)
+        denoised_img_numpy = dataset_.to_image(denoised_img_tensor, clip=True)
         images = np.vstack((cleaned_img_numpy, noised_img_numpy, denoised_img_numpy))
+
+        psnr = metrics.peak_signal_to_noise_ratio(cleaned_img_numpy, denoised_img_numpy)
+        print(f"{psnr=:.2f}")
 
         # noinspection PyUnresolvedReferences
         images = cv.cvtColor(images, cv.COLOR_RGB2BGR)
@@ -336,14 +329,13 @@ def test(test_path: pathlib.Path,
 
 if __name__ == "__main__":
     # Postfix
-    px = "add"
+    px = "blur"
     dataset_name = f"BSDS500"
 
     # Training
     noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
     real_img_path = __SRC__ / f"{dataset_name}-pfr"
-    parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T001614" / "141_epoch.pth"
-    # parameters_path = None
+    parameters_path = None
 
     train(
         noised_img_path,
@@ -353,9 +345,9 @@ if __name__ == "__main__":
     )
 
     # TESTING
-    # noised_img_path = __SRC__ / f"{dataset_name}-{px}"
-    # real_img_path = __SRC__ / dataset_name
-    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-04-27T155536/54_epoch.pth"
+    # noised_img_path = __SRC__ / f"{dataset_name}-{px}" / "test"
+    # real_img_path = __SRC__ / dataset_name / "test"
+    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T183920" / "34_epoch.pth"
     # test(
     #     noised_img_path,
     #     real_img_path,

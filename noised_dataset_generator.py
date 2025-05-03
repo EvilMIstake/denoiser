@@ -26,10 +26,10 @@ if __name__ == "__main__":
     rotator = mappers.Rotator()
 
     mode = ""
-    i_path = __SRC__ / "BSDS500-pfr" / mode
-    e_path = __SRC__ / "BSDS500-periodic-pfr" / mode
+    i_path = __SRC__ / "BSDS500" / mode
+    e_path = __SRC__ / "BSDS500-periodic" / mode
 
-    num_workers = 6
+    num_workers = 4
     mapper = noiser
     reader = readers.CVReader()
     part = None

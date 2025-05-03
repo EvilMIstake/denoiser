@@ -23,7 +23,10 @@ class _DatasetMixins:
         return get_all_paths(path)
 
     @staticmethod
-    def to_image(image: torch.Tensor) -> np.ndarray:
+    def to_image(image: torch.Tensor, clip: bool = False) -> np.ndarray:
+        if clip:
+            image = image.clip(0., 1.)
+
         img = np.uint8(image.squeeze(0).cpu().permute(1, 2, 0).numpy() * 255.)
         return img
 
@@ -84,11 +87,8 @@ class _DatasetMixins:
         )
         image /= patch_count_mask
 
-        if clip:
-            image = torch.clip(image, 0., 1.)
-
         _, _, h, w = shape
-        image_numpy = _DatasetMixins.to_image(image)[:h, :w, :]
+        image_numpy = _DatasetMixins.to_image(image, clip)[:h, :w, :]
 
         return image_numpy
 
@@ -123,7 +123,11 @@ class DnCnnDataset(Dataset, _DatasetMixins):
         return img_n_tensor, img_c_tensor
 
 
-class DnCnnDatasetTest(Dataset, _DatasetMixins):
+class DnCnnDatasetTest(DnCnnDataset):
+    ...
+
+
+class DnCnnDatasetTestPatches(Dataset, _DatasetMixins):
     def __init__(self,
                  noised_data_path: pathlib.Path,
                  cleaned_data_path: pathlib.Path,
@@ -150,7 +154,7 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
         # Read images
         img_n_raw = self.__reader.read_image(self.__noised_data_paths[item])
         img_c_raw = self.__reader.read_image(self.__cleaned_data_paths[item])
-        x, y = img_n_raw.size
+        x, y, _ = img_n_raw.shape
 
         # Convert images to tensor
         img_n = self.__transform(img_n_raw)
@@ -167,7 +171,7 @@ class DnCnnDatasetTest(Dataset, _DatasetMixins):
             mode="constant"
         )
 
-        img_n_patches_list, img_n_patches_positions = self.get_patches(img_n, *img_c_raw.size)
+        img_n_patches_list, img_n_patches_positions = self.get_patches(img_n, x, y)
         img_n_patches_tensor = torch.stack(img_n_patches_list)
         img_c = img_c.unsqueeze(0)
 
