@@ -22,6 +22,7 @@ class Config(metaclass=_ConfigMeta):
     weight_decay: float = 0.
     save_threshold: int = 21.
     validation_img_extraction_step: int = 500
+    residual: bool = False
 
     @classmethod
     def __str__(cls) -> str:

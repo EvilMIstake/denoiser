@@ -57,7 +57,7 @@ class SaltNPaperNoiser(IRandomNoiser):
 class MotionBlurNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__h_min, self.__h_max = 3, 15
+        self.__h_min, self.__h_max = 3, 7
 
     def noised_image(self) -> np.ndarray:
         size = (randint(self.__h_min, self.__h_max) << 1) + 1
@@ -74,7 +74,7 @@ class MotionBlurNoiser(IRandomNoiser):
 class DeFocusBlurNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__h_min, self.__h_max = 3, 15
+        self.__h_min, self.__h_max = 3, 7
 
     def noised_image(self) -> np.ndarray:
         size = (randint(self.__h_min, self.__h_max) << 1) + 1
