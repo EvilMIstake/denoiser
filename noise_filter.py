@@ -7,16 +7,13 @@ from utils.nn.dncnn import DnCNN
 from utils.nn import dataset
 from utils import (
     utils,
-    metrics,
     __SRC__,
     __MODEL_STATES__
 )
 
 
 if __name__ == "__main__":
-    # img_path = __SRC__ / "BSDS500" / "val" / "21077.jpg"
-    img_path = __SRC__ / "real_noise" / "t.png"
-    # img_path = __SRC__ / "BSDS500-periodic" / "val" / "3096.jpg"
+    img_path = __SRC__ / "BSDS500" / "val" / "21077.jpg"
     model_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T183920" / "34_epoch.pth"
 
     # noinspection PyUnresolvedReferences

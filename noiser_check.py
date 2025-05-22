@@ -1,28 +1,28 @@
 import numpy as np
 import cv2 as cv
 
-from utils import __SRC__
-from utils.nn import utils as nn_utils
-from utils import utils
+from utils import __SRC__, utils
+from utils.nn import dataset, readers
 
 
 if __name__ == "__main__":
-    noised_img_path = __SRC__ / "imagenet-mini-shrink-noised" / "val"
-    real_img_path = __SRC__ / "imagenet-mini-shrink" / "val"
-    n = 170
+    noised_img_path = __SRC__ / "imagenet-mini-noised" / "val"
+    real_img_path = __SRC__ / "imagenet-mini" / "val"
+    n = 12
 
-    dataset = nn_utils.DnCnnDatasetTest(
+    dataset_ = dataset.DnCnnDatasetTest(
         noised_data_path=noised_img_path,
         cleaned_data_path=real_img_path,
+        reader=readers.CVReader()
     )
 
-    noised, pos, clean = dataset[n]
+    noised, clean = dataset_[n]
     noised = utils.to_device(noised, utils.get_device())
 
-    img_clean = dataset.to_image(clean)
-    noised_full = dataset.from_patches(noised, pos, clean.shape)
+    img_clean_numpy = dataset_.to_image(clean)
+    img_noised_numpy = dataset_.to_image(noised)
 
-    images = np.vstack((img_clean, noised_full))
+    images = np.vstack((img_clean_numpy, img_noised_numpy))
 
     # noinspection PyUnresolvedReferences
     images = cv.cvtColor(images, cv.COLOR_RGB2BGR)
