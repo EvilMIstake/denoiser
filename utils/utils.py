@@ -1,12 +1,11 @@
 import pathlib
 
+import numpy as np
 import torch
 import torchvision
 import torchvision.models
-from torchvision.transforms import transforms
-
 from matplotlib import pyplot as plt
-import numpy as np
+from torchvision.transforms import transforms
 
 
 class ToDeviceLoader:

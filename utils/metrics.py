@@ -1,5 +1,5 @@
-import numpy as np
 import cv2 as cv
+import numpy as np
 
 
 def _check_shapes(img_a: np.ndarray, img_b: np.ndarray) -> None:

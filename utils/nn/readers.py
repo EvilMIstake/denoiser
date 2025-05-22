@@ -1,10 +1,10 @@
 import pathlib
 
-import numpy as np
 import cv2 as cv
+import numpy as np
 
-from utils.nn import dataset
 from utils import readers
+from utils.nn import dataset
 
 
 class CVReader(dataset.IReader):

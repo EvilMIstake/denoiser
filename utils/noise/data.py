@@ -1,5 +1,5 @@
-import pathlib
 import dataclasses
+import pathlib
 
 import numpy as np
 

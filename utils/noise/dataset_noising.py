@@ -1,22 +1,22 @@
 import os
-import time
+import pathlib
 import queue
 import random
-import pathlib
 import threading
+import time
+from abc import ABC, abstractmethod
+from concurrent import futures
 from typing import (
     Generator,
     Iterable
 )
-from concurrent import futures
-from abc import ABC, abstractmethod
 
+import cv2 as cv
 import numpy as np
 import tqdm
-import cv2 as cv
 
-from utils.utils import get_all_paths
 from utils.noise import data
+from utils.utils import get_all_paths
 
 
 class IMapper(ABC):

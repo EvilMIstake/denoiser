@@ -2,8 +2,8 @@ import pathlib
 
 import numpy as np
 
-from utils.noise.dataset_noising import IReader
 from utils import readers
+from utils.noise.dataset_noising import IReader
 
 
 class MatReader(IReader):

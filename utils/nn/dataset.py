@@ -1,14 +1,13 @@
-from abc import ABC, abstractmethod
 import pathlib
+from abc import ABC, abstractmethod
 
 import numpy as np
-
 import torch
-from torchvision.transforms import transforms
 from torch.utils.data import Dataset
+from torchvision.transforms import transforms
 
-from utils.utils import get_all_paths, get_device
 from utils.nn import config
+from utils.utils import get_all_paths, get_device
 
 
 class IReader(ABC):
@@ -54,9 +53,9 @@ class _DatasetMixins:
         ]
         patches = [
             image_padded[
-                :,
-                i:min(i + config.Config.patch_size, h),
-                j:min(j + config.Config.patch_size, w)
+            :,
+            i:min(i + config.Config.patch_size, h),
+            j:min(j + config.Config.patch_size, w)
             ]
             for i, j in positions
         ]

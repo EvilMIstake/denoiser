@@ -1,8 +1,8 @@
 import pathlib
 
+import cv2 as cv
 import numpy as np
 import scipy as sc
-import cv2 as cv
 from PIL import Image
 
 
