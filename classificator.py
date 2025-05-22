@@ -1,11 +1,14 @@
 import torch
 import torchvision.models
 
-from utils import utils
+from utils import (
+    utils,
+    __SRC__
+)
 
 
 if __name__ == "__main__":
-    with open("src/image_net_classes.txt", "r") as f_stream:
+    with open(__SRC__ / "image_net_classes.txt", "r") as f_stream:
         image_net_classes = f_stream.read().split("\n")
 
     batch_size = 256
@@ -16,7 +19,7 @@ if __name__ == "__main__":
     res_net.to(device)
     res_net.eval()
 
-    classification_path = "src/imagenet-mini-noised/train"
+    classification_path = __SRC__ / "imagenet-mini-poisson/"
     dataset = torchvision.datasets.ImageFolder(
         classification_path,
         transform=utils.get_resnet_preprocess()

@@ -86,3 +86,8 @@ def add_periodic_noise(image: np.ndarray,
     # noinspection PyUnresolvedReferences
     blured_image = cv.add(image, periodic_noise)
     return blured_image
+
+
+def add_poisson_noise(image: np.ndarray, peak: int) -> np.ndarray:
+    noisy_image = np.uint8(np.random.poisson(image / 255.0 * peak) / peak * 255)
+    return noisy_image

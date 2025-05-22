@@ -68,7 +68,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
     cnn = DnCNN(
         num_layers=config.Config.num_layers,
         parameters_path=model_path,
-        residual=config.Config.residual
+        residual=config.Config.residual,
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
@@ -233,12 +233,13 @@ def _test(model_path: pathlib.Path,
           dataset_: dataset.DnCnnDatasetTest) -> None:
     cnn = DnCNN(
         num_layers=config.Config.num_layers,
-        parameters_path=model_path
+        parameters_path=model_path,
+        residual=config.Config.residual
     )
     cnn = utils.to_device(cnn, _DEVICE)
 
     cnn.eval()
-    n = 120
+    n = 10
 
     with torch.no_grad():
         data = dataset_[n]
@@ -252,10 +253,16 @@ def _test(model_path: pathlib.Path,
         denoised_img_numpy = dataset_.to_image(denoised_img_tensor, clip=True)
         images = np.vstack((cleaned_img_numpy, noised_img_numpy, denoised_img_numpy))
 
-        psnr = metrics.peak_signal_to_noise_ratio(cleaned_img_numpy, denoised_img_numpy)
-        ssim = metrics.structure_similarity(cleaned_img_numpy, denoised_img_numpy)
-        print(f"{psnr=:.2f}")
-        print(f"{ssim=:.2f}")
+        psnr_d = metrics.peak_signal_to_noise_ratio(cleaned_img_numpy, denoised_img_numpy)
+        ssim_d = metrics.structure_similarity(cleaned_img_numpy, denoised_img_numpy)
+
+        psnr_n = metrics.peak_signal_to_noise_ratio(cleaned_img_numpy, noised_img_numpy)
+        ssim_n = metrics.structure_similarity(cleaned_img_numpy, noised_img_numpy)
+
+        print(f"{psnr_d=:.2f}")
+        print(f"{ssim_d=:.2f}")
+        print(f"{psnr_n=:.2f}")
+        print(f"{ssim_n=:.2f}")
 
         # noinspection PyUnresolvedReferences
         images = cv.cvtColor(images, cv.COLOR_RGB2BGR)
@@ -332,27 +339,30 @@ def test(test_path: pathlib.Path,
 
 if __name__ == "__main__":
     # Postfix
-    px = "blur"
+    px = "add"
     dataset_name = f"BSDS500"
 
     # Training
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
-    real_img_path = __SRC__ / f"{dataset_name}-pfr"
-    parameters_path = None
-
-    train(
-        noised_img_path,
-        real_img_path,
-        px,
-        parameters_path
-    )
-
-    # TESTING
-    # noised_img_path = __SRC__ / f"{dataset_name}-{px}".rstrip("-") / "test"
-    # real_img_path = __SRC__ / dataset_name / "test"
-    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T183920" / "47_epoch.pth"
-    # test(
+    # noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
+    # real_img_path = __SRC__ / f"{dataset_name}-pfr"
+    # # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_blur_20l_2025-05-04T163626" / "29_epoch.pth"
+    # parameters_path = None
+    #
+    # train(
     #     noised_img_path,
     #     real_img_path,
+    #     px,
     #     parameters_path
     # )
+
+    # TESTING
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}".rstrip("-") / "test"
+    real_img_path = __SRC__ / dataset_name / "test"
+    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_periodic_20l_2025-05-06T114529" / "46_epoch.pth"
+    parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T183920" / "34_epoch.pth"
+
+    test(
+        noised_img_path,
+        real_img_path,
+        parameters_path
+    )

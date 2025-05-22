@@ -20,9 +20,9 @@ class Config(metaclass=_ConfigMeta):
     gamma: float = 0.25
     milestone: int = 15
     weight_decay: float = 0.
-    save_threshold: int = 21.
+    save_threshold: int = 23.
     validation_img_extraction_step: int = 500
-    residual: bool = False
+    residual: bool = True
 
     @classmethod
     def __str__(cls) -> str:

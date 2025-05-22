@@ -109,6 +109,17 @@ class PeriodicNoiser(IRandomNoiser):
         return noised_img
 
 
+class PoissonNoiser(IRandomNoiser):
+    def __init__(self, image: np.ndarray):
+        self.__image = image
+        self.__peak_min, self.__peak_max = 1, 100
+
+    def noised_image(self) -> np.ndarray:
+        peak = randint(self.__peak_min, self.__peak_max)
+        noised_img = noise.add_poisson_noise(self.__image, peak)
+        return noised_img
+
+
 class PlaceHolder(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
@@ -131,5 +142,7 @@ def get_noiser(image: np.ndarray, idx: int) -> IRandomNoiser:
             return DeFocusBlurNoiser(image)
         case 5:
             return PeriodicNoiser(image)
+        case 6:
+            return PoissonNoiser(image)
         case _:
             return PlaceHolder(image)
