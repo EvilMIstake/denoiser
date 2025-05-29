@@ -7,18 +7,14 @@ from utils.noise.noise import noise_samples
 def add_gaussian_noise(image: np.ndarray,
                        noise_level: float) -> np.ndarray[np.uint8]:
     gauss = noise_samples.gaussian_noise(image.shape, noise_level)
-
-    # noinspection PyUnresolvedReferences
-    noisy_image = cv.add(image, gauss)
+    noisy_image = np.clip(image + gauss, 0., 255.).astype(np.uint8)
     return noisy_image
 
 
 def add_uniform_noise(image: np.ndarray,
                       noise_level: float) -> np.ndarray[np.uint8]:
     uniform = noise_samples.uniform_noise(image.shape, noise_level)
-
-    # noinspection PyUnresolvedReferences
-    noisy_image = cv.add(image, uniform)
+    noisy_image = np.clip(image + uniform, 0., 255.).astype(np.uint8)
     return noisy_image
 
 
