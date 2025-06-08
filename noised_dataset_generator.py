@@ -9,7 +9,7 @@ from utils import __SRC__
 
 if __name__ == "__main__":
     # Noiser stuff
-    left, right = 0, 1
+    left, right = 6, 6
     noiser = mappers.Noiser(left, right)
 
     # Cropper stuff
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     mode = ""
     i_path = __SRC__ / "BSDS500-pfr" / mode
-    e_path = __SRC__ / "BSDS500-add-pfr" / mode
+    e_path = __SRC__ / "BSDS500-poisson-pfr" / mode
 
     num_workers = 6
     mapper = noiser

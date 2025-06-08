@@ -339,30 +339,30 @@ def test(test_path: pathlib.Path,
 
 if __name__ == "__main__":
     # Postfix
-    px = "add"
+    px = "blur"
     dataset_name = f"BSDS500"
 
     # Training
-    # noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
-    # real_img_path = __SRC__ / f"{dataset_name}-pfr"
-    # # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_blur_20l_2025-05-04T163626" / "29_epoch.pth"
-    # parameters_path = None
-    #
-    # train(
-    #     noised_img_path,
-    #     real_img_path,
-    #     px,
-    #     parameters_path
-    # )
+    noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
+    real_img_path = __SRC__ / f"{dataset_name}-pfr"
+    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_poisson_20l_2025-05-09T200955" / "46_epoch.pth"
+    parameters_path = None
 
-    # TESTING
-    noised_img_path = __SRC__ / f"{dataset_name}-{px}".rstrip("-") / "test"
-    real_img_path = __SRC__ / dataset_name / "test"
-    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_periodic_20l_2025-05-06T114529" / "46_epoch.pth"
-    parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T183920" / "34_epoch.pth"
-
-    test(
+    train(
         noised_img_path,
         real_img_path,
+        px,
         parameters_path
     )
+
+    # TESTING
+    # noised_img_path = __SRC__ / f"{dataset_name}-{px}".rstrip("-") / "test"
+    # real_img_path = __SRC__ / dataset_name / "test"
+    # # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_periodic_20l_2025-05-06T114529" / "46_epoch.pth"
+    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_add_20l_2025-05-02T183920" / "34_epoch.pth"
+    #
+    # test(
+    #     noised_img_path,
+    #     real_img_path,
+    #     parameters_path
+    # )

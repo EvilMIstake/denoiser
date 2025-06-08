@@ -85,5 +85,6 @@ def add_periodic_noise(image: np.ndarray,
 
 
 def add_poisson_noise(image: np.ndarray, peak: int) -> np.ndarray:
-    noisy_image = np.uint8(np.random.poisson(image / 255.0 * peak) / peak * 255)
+    poisson_sample = np.random.poisson(image / 255. * peak) / peak * 255.
+    noisy_image = np.uint8(np.clip(poisson_sample, 0., 255.))
     return noisy_image

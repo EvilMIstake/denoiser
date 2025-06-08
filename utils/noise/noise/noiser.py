@@ -16,9 +16,11 @@ class GaussianNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
         self.__noise_level = 50
+        self.__start = 10
+        self.__range = self.__noise_level - self.__start
 
     def noised_image(self) -> np.ndarray:
-        noise_level = random() * self.__noise_level
+        noise_level = random() * self.__range + self.__start
         noised_img = noise.add_gaussian_noise(
             self.__image,
             noise_level
@@ -30,9 +32,11 @@ class UniformNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
         self.__noise_level = 50
+        self.__start = 10
+        self.__range = self.__noise_level - self.__start
 
     def noised_image(self) -> np.ndarray:
-        noise_level = random() * self.__noise_level
+        noise_level = random() * self.__range + self.__start
         noised_img = noise.add_uniform_noise(
             self.__image,
             noise_level
@@ -112,7 +116,7 @@ class PeriodicNoiser(IRandomNoiser):
 class PoissonNoiser(IRandomNoiser):
     def __init__(self, image: np.ndarray):
         self.__image = image
-        self.__peak_min, self.__peak_max = 1, 100
+        self.__peak_min, self.__peak_max = 1, 50
 
     def noised_image(self) -> np.ndarray:
         peak = randint(self.__peak_min, self.__peak_max)

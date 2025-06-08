@@ -18,11 +18,11 @@ class Config(metaclass=_ConfigMeta):
     num_epochs: int = 50
     learning_rate: float = 1e-3
     gamma: float = 0.25
-    milestone: int = 15
+    milestone: int = 10
     weight_decay: float = 0.
-    save_threshold: int = 23.
+    save_threshold: int = 26.
     validation_img_extraction_step: int = 500
-    residual: bool = True
+    residual: bool = False
 
     @classmethod
     def __str__(cls) -> str:
