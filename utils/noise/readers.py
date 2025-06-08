@@ -3,7 +3,7 @@ import pathlib
 import numpy as np
 
 from utils import readers
-from utils.noise.dataset_noising import IReader
+from utils.noise.dataset_mapping import IReader
 
 
 class MatReader(IReader):

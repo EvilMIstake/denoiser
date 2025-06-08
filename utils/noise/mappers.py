@@ -4,11 +4,11 @@ from typing import Iterable
 import cv2 as cv
 import numpy as np
 
-from utils.noise import data, dataset_noising
+from utils.noise import data, dataset_mapping
 from utils.noise.noise import noiser as noiser_
 
 
-class Noiser(dataset_noising.IMapper):
+class Noiser(dataset_mapping.IMapper):
     def __init__(self, left: int, right: int):
         """
         :param left: start of the range of noise classes
@@ -25,7 +25,7 @@ class Noiser(dataset_noising.IMapper):
         return pipeline_data,
 
 
-class Cropper(dataset_noising.IMapper):
+class Cropper(dataset_mapping.IMapper):
     def __init__(self,
                  size: int,
                  patch_size: int,
@@ -84,7 +84,7 @@ class Cropper(dataset_noising.IMapper):
         return processed_data
 
 
-class Flipper(dataset_noising.IMapper):
+class Flipper(dataset_mapping.IMapper):
     def __call__(self, pipeline_data: data.LoadData) -> Iterable[data.LoadData]:
         image = pipeline_data.data
         img_path = pipeline_data.name
@@ -111,7 +111,7 @@ class Flipper(dataset_noising.IMapper):
         return processed_data
 
 
-class Rotator(dataset_noising.IMapper):
+class Rotator(dataset_mapping.IMapper):
     def __call__(self, pipeline_data: data.LoadData) -> Iterable[data.LoadData]:
         image = pipeline_data.data
         img_path = pipeline_data.name

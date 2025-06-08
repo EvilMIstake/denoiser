@@ -1,5 +1,5 @@
 from utils.noise import (
-    dataset_noising,
+    dataset_mapping,
     mappers,
     readers
 )
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     reader = readers.CVReader()
     part = None
 
-    dataset_noising.dataset_process(
+    dataset_mapping.dataset_process(
         i_path,
         e_path,
         num_workers=num_workers,
