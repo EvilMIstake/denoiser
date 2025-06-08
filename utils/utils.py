@@ -33,7 +33,7 @@ def get_resnet() -> torchvision.models.ResNet:
 
 
 def get_resnet_preprocess() -> torchvision.transforms.Compose:
-    res_net_transforms = torchvision.transforms.Compose(
+    res_net_transforms = transforms.Compose(
         [
             transforms.Resize(256),
             transforms.CenterCrop(224),

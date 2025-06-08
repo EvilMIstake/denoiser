@@ -14,8 +14,6 @@ def _evaluate(model: torch.nn.Module, d_loader: utils.ToDeviceLoader) -> float:
     acc_numerator = .0
     acc_denominator = .0
 
-    model.eval()
-
     with torch.no_grad():
         with tqdm.tqdm(d_loader, total=len(d_loader)) as tqdm_:
             tqdm_.set_description("Batch[0] | Total accuracy[0]")
@@ -34,14 +32,10 @@ def _evaluate(model: torch.nn.Module, d_loader: utils.ToDeviceLoader) -> float:
 
 
 def classification(path_with_labels: pathlib.Path,
+                   model: torch.nn.Module,
                    transform: torchvision.transforms.Compose,
                    num_workers: int = 8,
                    batch_size: int = 256) -> float:
-    res_net = utils.get_resnet()
-    device = utils.get_device()
-    res_net.to(device)
-    res_net.eval()
-
     dataset = torchvision.datasets.ImageFolder(
         path_with_labels,
         transform=transform
@@ -54,21 +48,28 @@ def classification(path_with_labels: pathlib.Path,
     )
     to_device_data_loader = utils.ToDeviceLoader(
         data_loader,
-        device
+        utils.get_device()
     )
 
-    accuracy = _evaluate(res_net, to_device_data_loader)
+    accuracy = _evaluate(model, to_device_data_loader)
 
     return accuracy
 
 
 if __name__ == "__main__":
-    pwl = __SRC__ / "imagenet-mini-impulse/"
+    pwl = __SRC__ / "imagenet-mini-add/"
     b_size = 256
     workers = 8
 
+    model = utils.get_resnet()
+    for param in model.parameters():
+        param.requires_grad = False
+    model.to(utils.get_device())
+    model.eval()
+
     acc = classification(
         pwl,
+        model,
         utils.get_resnet_preprocess(),
         workers,
         b_size

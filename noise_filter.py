@@ -41,8 +41,8 @@ class Denoiser:
 
     @staticmethod
     def denoise(model: DnCNN, tensor: torch.Tensor) -> torch.Tensor:
-        tensor = tensor.to(utils.get_device())
         with torch.no_grad():
+            tensor = tensor.to(utils.get_device())
             result = model(tensor)
 
         return result
@@ -56,8 +56,13 @@ class Denoiser:
             parameters_path=parameters_path,
             residual=residual
         )
-        model.eval()
         model = model.to(utils.get_device())
+
+        for param in model.parameters():
+            param.requires_grad = False
+
+        model.eval()
+
         return model
 
     def denoise_add(self, tensor: torch.Tensor) -> torch.Tensor:
