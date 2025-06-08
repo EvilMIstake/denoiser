@@ -83,7 +83,7 @@ class Denoiser:
         denoise_blur = self.denoise_blur(denoise_poisson)
         return denoise_blur
 
-    def __call__(self, tensor: torch.Tensor, type_: NoiseEnum) -> torch.Tensor:
+    def __call__(self, type_: NoiseEnum, tensor: torch.Tensor) -> torch.Tensor:
         res_tensor = tensor
 
         match type_:

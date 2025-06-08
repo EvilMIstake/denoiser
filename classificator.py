@@ -50,7 +50,6 @@ def classification(path_with_labels: pathlib.Path,
         dataset,
         batch_size=batch_size,
         num_workers=num_workers,
-        shuffle=True,
         pin_memory=True
     )
     to_device_data_loader = utils.ToDeviceLoader(
