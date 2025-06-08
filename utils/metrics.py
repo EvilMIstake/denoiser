@@ -31,12 +31,12 @@ def rmsd(img_prior: np.ndarray, img_predicted: np.ndarray) -> np.float32:
 def peak_signal_to_noise_ratio(img_prior: np.ndarray, img_predicted: np.ndarray) -> np.float32:
     """PSNR calculation
 
-    Пиковое отношение сигнал/шум, обозначающее отношение
-    между максимально возможной мощностью искажающего сигнала
-    и мощностью искажающего шума. Поскольку многие сигналы
-    имеют очень широкий динамический диапазон, PSNR обычно
-    выражается как логарифмическая величина (с использованием
-    шкалы децибел)
+    The peak signal-to-noise ratio, which indicates the ratio
+    between the maximum possible power of the distorting signal
+    and the power of the distorting noise. Since many signals
+    have a very wide dynamic range, PSNR is usually
+    expressed as a logarithmic value (using
+    a decibel scale)
     """
 
     max_i = 255.
@@ -49,17 +49,16 @@ def peak_signal_to_noise_ratio(img_prior: np.ndarray, img_predicted: np.ndarray)
 def structure_similarity(img_prior: np.ndarray, img_predicted: np.ndarray) -> np.float32:
     """SSIM calculation
 
-    Метрика схожести двух изображений. Разницей, в сравнении
-    с другими метриками (PSNR, MSE), заключается в том, что
-    они оценивают абсолютные ошибки. SSIM-индекс, в свою
-    очередь, является моделью, рассматривающей ухудшение
-    изображения как воспринимаемое изменение структурной
-    информации. Структурная информация – идея о том, что
-    пиксели имеют сильные взаимозависимости, особенно
-    когда они пространственно близки. Эти зависимости
-    содержат важную информацию о структуре объектов в
-    визуальной сцене. Иными словами, данная метрика
-    более точно отражает человеческое восприятие изображений
+    A metric for the similarity of two images.
+    The difference, in comparison with other metrics (PSNR, MSE),
+    is that they evaluate absolute errors. The SSIM index, in
+    turn, is a model that considers image degradation as a perceived
+    change in structural information. Structural information is the idea that
+    pixels have strong interdependencies, especially
+    when they are spatially close. These dependencies are They contain
+    important information about the structure of objects in
+    a visual scene. In other words, this metric It more accurately
+    reflects the human perception of images.
     """
 
     _check_shapes(img_prior, img_predicted)
