@@ -1,5 +1,3 @@
-import pathlib
-
 import torch
 import torchvision.models
 import tqdm
@@ -31,15 +29,10 @@ def _evaluate(model: torch.nn.Module, d_loader: utils.ToDeviceLoader) -> float:
     return total_accuracy
 
 
-def classification(path_with_labels: pathlib.Path,
-                   model: torch.nn.Module,
-                   transform: torchvision.transforms.Compose,
+def classification(model: torch.nn.Module,
+                   dataset: torchvision.datasets.ImageFolder,
                    num_workers: int = 8,
                    batch_size: int = 256) -> float:
-    dataset = torchvision.datasets.ImageFolder(
-        path_with_labels,
-        transform=transform
-    )
     data_loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
@@ -67,10 +60,14 @@ if __name__ == "__main__":
     model.to(utils.get_device())
     model.eval()
 
-    acc = classification(
+    dataset = torchvision.datasets.ImageFolder(
         pwl,
+        transform=utils.get_resnet_preprocess()
+    )
+
+    acc = classification(
         model,
-        utils.get_resnet_preprocess(),
+        dataset,
         workers,
         b_size
     )

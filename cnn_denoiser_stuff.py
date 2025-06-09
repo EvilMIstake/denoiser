@@ -2,27 +2,25 @@ import datetime
 import pathlib
 from dataclasses import dataclass
 
-import torch
-from torch import nn
-import torch.optim as optim
-import numpy as np
-
 import cv2 as cv
-from tqdm import tqdm
+import numpy as np
 import pandas as pd
+import torch
+import torch.optim as optim
+from torch import nn
+from tqdm import tqdm
 
-from utils.nn.dncnn import DnCNN
+from utils import (
+    utils,
+    metrics,
+    __SRC__
+)
 from utils.nn import (
     dataset,
     config,
     readers
 )
-from utils import (
-    utils,
-    metrics,
-    __SRC__,
-    __MODEL_STATES__
-)
+from utils.nn.dncnn import DnCNN
 
 _SEED = 1359140914
 _DEVICE = utils.get_device()
@@ -112,7 +110,6 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             tqdm_.set_description(f"Train Epoch {epoch + 1}/{config.Config.num_epochs}")
 
             for noised, real in train_dataloader:
-
                 optimizer.zero_grad()
                 prediction = cnn(noised)
                 loss_train = get_loss(prediction, real)
@@ -188,7 +185,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
 
                     tqdm_.update(len(noised))
                     tqdm_.set_postfix_str(
-                        f"LOSS: {total_loss_val/ n_val:.4f} | "
+                        f"LOSS: {total_loss_val / n_val:.4f} | "
                         f"PSNR: {total_psnr_val / n_val: .2f}"
                     )
 

@@ -1,19 +1,18 @@
+import enum
 import pathlib
 
+import cv2 as cv
 import torch
 from torchvision import transforms
-import enum
 
-import cv2 as cv
-
-from utils.nn.dncnn import DnCNN
-from utils.nn import dataset
 from utils import (
     utils,
     metrics,
     __SRC__,
     __MODEL_SRC__
 )
+from utils.nn import dataset
+from utils.nn.dncnn import DnCNN
 
 
 class NoiseEnum(enum.Enum):

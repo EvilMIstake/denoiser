@@ -1,11 +1,10 @@
+from utils import __SRC__
+from utils.nn import config
 from utils.noise import (
     dataset_mapping,
     mappers,
     readers
 )
-from utils.nn import config
-from utils import __SRC__
-
 
 if __name__ == "__main__":
     # Noiser stuff
@@ -26,13 +25,13 @@ if __name__ == "__main__":
     rotator = mappers.Rotator()
 
     mode = ""
-    i_path = __SRC__ / "BSDS500-pfr" / mode
-    e_path = __SRC__ / "BSDS500-poisson-pfr" / mode
+    i_path = __SRC__ / "imagenet-mini" / mode
+    e_path = __SRC__ / "imagenet-mini-poisson" / mode
 
     num_workers = 6
     mapper = noiser
     reader = readers.CVReader()
-    part = None
+    part = slice(0, 1000000, 10)
 
     dataset_mapping.dataset_process(
         i_path,
