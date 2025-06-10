@@ -22,6 +22,7 @@ class NoiseEnum(enum.Enum):
     PERIODIC: int = enum.auto()
     POISSON: int = enum.auto()
     UNKNOWN: int = enum.auto()
+    NONE: int = enum.auto()
 
 
 class Denoiser:

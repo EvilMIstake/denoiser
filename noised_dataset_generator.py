@@ -8,7 +8,7 @@ from utils.noise import (
 
 if __name__ == "__main__":
     # Noiser stuff
-    left, right = 6, 6
+    left, right = -1, -1
     noiser = mappers.Noiser(left, right)
 
     # Cropper stuff
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     mode = ""
     i_path = __SRC__ / "imagenet-mini" / mode
-    e_path = __SRC__ / "imagenet-mini-poisson" / mode
+    e_path = __SRC__ / "imagenet-mini-shrink" / mode
 
     num_workers = 6
     mapper = noiser

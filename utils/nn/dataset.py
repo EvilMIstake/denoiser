@@ -96,7 +96,8 @@ class DnCnnDataset(Dataset, _DatasetMixins):
     def __init__(self,
                  noised_data_path: pathlib.Path,
                  cleaned_data_path: pathlib.Path,
-                 reader: IReader):
+                 reader: IReader,
+                 crop_size: int = 224):
         super(Dataset, self).__init__()
         self.__noised_data_paths = self._get_all_paths(noised_data_path)
         self.__cleaned_data_paths = self._get_all_paths(cleaned_data_path)
@@ -104,7 +105,13 @@ class DnCnnDataset(Dataset, _DatasetMixins):
         assert len(self.__cleaned_data_paths) == len(self.__noised_data_paths), \
             "Datasets must be consistent"
 
-        self.__transform = transforms.ToTensor()
+        self.__transform = transforms.Compose(
+            [
+                transforms.ToPILImage(),
+                transforms.CenterCrop(crop_size),
+                transforms.ToTensor()
+            ]
+        )
         self.__reader = reader
 
     def __len__(self) -> int:

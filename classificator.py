@@ -8,6 +8,7 @@ from utils import (
 )
 
 
+# TODO: Add ssim | psnr calculation
 def _evaluate(model: torch.nn.Module, d_loader: utils.ToDeviceLoader) -> float:
     acc_numerator = .0
     acc_denominator = .0
