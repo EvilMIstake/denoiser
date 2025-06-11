@@ -8,7 +8,6 @@ from utils import (
 )
 
 
-# TODO: Add ssim | psnr calculation
 def _evaluate(model: torch.nn.Module, d_loader: utils.ToDeviceLoader) -> float:
     acc_numerator = .0
     acc_denominator = .0
@@ -55,20 +54,20 @@ if __name__ == "__main__":
     b_size = 256
     workers = 8
 
-    model = utils.get_resnet()
-    for param in model.parameters():
+    model_ = utils.get_resnet()
+    for param in model_.parameters():
         param.requires_grad = False
-    model.to(utils.get_device())
-    model.eval()
+    model_.to(utils.get_device())
+    model_.eval()
 
-    dataset = torchvision.datasets.ImageFolder(
+    dataset_ = torchvision.datasets.ImageFolder(
         pwl,
         transform=utils.get_resnet_preprocess()
     )
 
     acc = classification(
-        model,
-        dataset,
+        model_,
+        dataset_,
         workers,
         b_size
     )
