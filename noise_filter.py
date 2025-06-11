@@ -41,6 +41,11 @@ class Denoiser:
         self._poisson_model = self.get_model(poisson_model_pth, 20)
         self._classifier = self.get_classificator(classifier_model_pth, 6)
 
+        self.__classification_transform = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
+        )
+
     @staticmethod
     def denoise(model: DnCNN, tensor: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
@@ -98,7 +103,8 @@ class Denoiser:
     def denoise_blind(self, tensor: torch.Tensor) -> torch.Tensor:
         """Attention: works with one image in tensor"""
 
-        noise_class = torch.argmax(self._classifier(tensor), -1).cpu().item()
+        classifier_output = self._classifier(self.__classification_transform(tensor))
+        noise_class = torch.argmax(classifier_output, -1).cpu().item()
         de_noised_image = tensor
 
         match noise_class:
