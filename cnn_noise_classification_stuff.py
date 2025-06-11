@@ -12,7 +12,8 @@ from tqdm import tqdm
 
 from utils import (
     utils,
-    __SRC__
+    __SRC__,
+    __MODEL_SRC__
 )
 from utils.nn import config
 from utils.nn.noise_classifier import get_noise_classifier
@@ -97,7 +98,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             for noised, labels in train_dataloader:
                 optimizer.zero_grad()
                 outputs = cnn(noised)
-                prediction = torch.argmax(cnn(noised), -1)
+                prediction = torch.argmax(outputs, -1)
                 loss_train = criterion(outputs, labels)
                 loss_train.backward()
                 optimizer.step()
@@ -124,7 +125,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
             with torch.no_grad():
                 for noised, labels in val_dataloader:
                     outputs = cnn(noised)
-                    prediction = torch.argmax(cnn(noised), -1)
+                    prediction = torch.argmax(outputs, -1)
                     loss_val = criterion(outputs, labels)
 
                     # Add batch ACC/LOSS values
@@ -218,9 +219,70 @@ def train(noised_image_path: pathlib.Path,
     )
 
 
+def _test(test_dataloader: utils.ToDeviceLoader,
+          model_path: pathlib.Path,
+          num_classes: int) -> None:
+    cnn = get_noise_classifier(num_classes, model_path)
+    cnn = utils.to_device(cnn, _DEVICE)
+
+    for param in cnn.parameters():
+        param.requires_grad = False
+
+    cnn.eval()
+
+    n_test = len(test_dataloader)
+    total_acc_train = .0
+
+    with tqdm(total=len(test_dataloader) * config.Config.batch_size) as tqdm_:
+        for noised, labels in test_dataloader:
+            prediction = torch.argmax(cnn(noised), -1)
+
+            # Add batch ACC/LOSS values
+            total_acc_train += int(torch.sum(prediction == labels.data)) / len(noised)
+
+            tqdm_.update(len(noised))
+            tqdm_.set_postfix_str(f"ACC: {total_acc_train / n_test: .4f}")
+
+
+def test(noised_image_path: pathlib.Path,
+         model_path: pathlib.Path,
+         num_classes: int) -> None:
+    test_noised_img_path = noised_image_path / "train"
+    transform = torchvision.transforms.Compose(
+        [
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ]
+    )
+
+    # Prepare test data
+    test_dataset = torchvision.datasets.ImageFolder(
+        test_noised_img_path,
+        transform=transform
+    )
+    test_dl = utils.ToDeviceLoader(
+        torch.utils.data.DataLoader(
+            test_dataset,
+            batch_size=config.Config.batch_size,
+            num_workers=config.Config.num_workers,
+            shuffle=True,
+            pin_memory=True,
+            drop_last=True
+        ),
+        _DEVICE
+    )
+
+    _test(test_dl, model_path, num_classes)
+
+
 if __name__ == '__main__':
     # Training
     noised_img_path = __SRC__ / "BSDS500-noised_classes"
+    model_path_ = __MODEL_SRC__ / "model_classifier.pth"
     nc = 6
 
-    train(noised_img_path, nc)
+    # train(noised_img_path, nc)
+    test(noised_img_path, model_path_, nc)

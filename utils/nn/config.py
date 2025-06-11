@@ -13,7 +13,7 @@ class Config(metaclass=_ConfigMeta):
     # 1 for small, 4 for large datasets
     num_workers: int = 2
     # ~Optimum
-    batch_size: int = 400
+    batch_size: int = 200
     num_layers: int = 20
     num_epochs: int = 50
     learning_rate: float = 1e-4

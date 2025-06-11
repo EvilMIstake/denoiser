@@ -98,7 +98,7 @@ class Denoiser:
     def denoise_blind(self, tensor: torch.Tensor) -> torch.Tensor:
         """Attention: works with one image in tensor"""
 
-        noise_class, *_ = torch.argmax(self._classifier(tensor), -1).cpu().int()
+        noise_class = torch.argmax(self._classifier(tensor), -1).cpu().item()
         de_noised_image = tensor
 
         match noise_class:
