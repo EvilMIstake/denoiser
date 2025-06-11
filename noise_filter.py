@@ -11,7 +11,7 @@ from utils import (
     __SRC__,
     __MODEL_SRC__
 )
-from utils.nn import dataset
+from utils.nn import dataset, noise_classifier
 from utils.nn.dncnn import DnCNN
 
 
@@ -32,12 +32,14 @@ class Denoiser:
         impulse_model_pth = __MODEL_SRC__ / "model_impulse.pth"
         periodic_model_pth = __MODEL_SRC__ / "model_periodic.pth"
         poisson_model_pth = __MODEL_SRC__ / "model_poisson.pth"
+        classifier_model_pth = __MODEL_SRC__ / "model_classifier.pth"
 
         self._add_model = self.get_model(add_model_pth, 20, True)
         self._blur_model = self.get_model(blur_model_pth, 20)
         self._impulse_model = self.get_model(impulse_model_pth, 20)
         self._periodic_model = self.get_model(periodic_model_pth, 20)
         self._poisson_model = self.get_model(poisson_model_pth, 20)
+        self._classifier = self.get_classificator(classifier_model_pth, 6)
 
     @staticmethod
     def denoise(model: DnCNN, tensor: torch.Tensor) -> torch.Tensor:
@@ -65,6 +67,19 @@ class Denoiser:
 
         return model
 
+    @staticmethod
+    def get_classificator(parameters_path: pathlib.Path,
+                          num_classes: int) -> torch.nn.Module:
+        model = noise_classifier.get_noise_classifier(num_classes, parameters_path)
+        model = model.to(utils.get_device())
+
+        for param in model.parameters():
+            param.requires_grad = False
+
+        model.eval()
+
+        return model
+
     def denoise_add(self, tensor: torch.Tensor) -> torch.Tensor:
         return self.denoise(self._add_model, tensor)
 
@@ -81,12 +96,24 @@ class Denoiser:
         return self.denoise(self._poisson_model, tensor)
 
     def denoise_blind(self, tensor: torch.Tensor) -> torch.Tensor:
-        denoise_add = self.denoise_add(tensor)
-        denoise_periodic = self.denoise_periodic(denoise_add)
-        denoise_impulse = self.denoise_impulse(denoise_periodic)
-        denoise_poisson = self.denoise_periodic(denoise_impulse)
-        denoise_blur = self.denoise_blur(denoise_poisson)
-        return denoise_blur
+        """Attention: works with one image in tensor"""
+
+        noise_class, *_ = torch.argmax(self._classifier(tensor), -1).cpu().int()
+        de_noised_image = tensor
+
+        match noise_class:
+            case 1:
+                de_noised_image = self.denoise_add(tensor)
+            case 2:
+                de_noised_image = self.denoise_impulse(tensor)
+            case 3:
+                de_noised_image = self.denoise_blur(tensor)
+            case 4:
+                de_noised_image = self.denoise_periodic(tensor)
+            case 5:
+                de_noised_image = self.denoise_poisson(tensor)
+
+        return de_noised_image
 
     def __call__(self, type_: NoiseEnum, tensor: torch.Tensor) -> torch.Tensor:
         res_tensor = tensor
