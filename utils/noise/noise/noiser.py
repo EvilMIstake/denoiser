@@ -13,11 +13,14 @@ class IRandomNoiser(ABC):
 
 
 class GaussianNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 max_level: int = 10,
+                 min_level: int = 50):
         self.__image = image
-        self.__noise_level = 50
-        self.__start = 10
-        self.__range = self.__noise_level - self.__start
+        self.__noise_level = max_level
+        self.__start = min_level
+        self.__range = max_level - min_level
 
     def noised_image(self) -> np.ndarray:
         noise_level = random() * self.__range + self.__start
@@ -29,11 +32,14 @@ class GaussianNoiser(IRandomNoiser):
 
 
 class UniformNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 max_level: int = 10,
+                 min_level: int = 50):
         self.__image = image
-        self.__noise_level = 50
-        self.__start = 10
-        self.__range = self.__noise_level - self.__start
+        self.__noise_level = max_level
+        self.__start = min_level
+        self.__range = max_level - min_level
 
     def noised_image(self) -> np.ndarray:
         noise_level = random() * self.__range + self.__start
@@ -45,9 +51,12 @@ class UniformNoiser(IRandomNoiser):
 
 
 class SaltNPaperNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 prob_a: int = 0.1,
+                 prob_b: int = 0.15):
         self.__image = image
-        self.__prob_a, self.__prob_b = 0.1, 0.15
+        self.__prob_a, self.__prob_b = prob_a, prob_b
 
     def noised_image(self) -> np.ndarray:
         prob = random() * self.__prob_a + self.__prob_b
@@ -59,9 +68,12 @@ class SaltNPaperNoiser(IRandomNoiser):
 
 
 class MotionBlurNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 h_min: int = 3,
+                 h_max: int = 7):
         self.__image = image
-        self.__h_min, self.__h_max = 3, 7
+        self.__h_min, self.__h_max = h_min, h_max
 
     def noised_image(self) -> np.ndarray:
         size = (randint(self.__h_min, self.__h_max) << 1) + 1
@@ -76,9 +88,12 @@ class MotionBlurNoiser(IRandomNoiser):
 
 
 class DeFocusBlurNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 h_min: int = 3,
+                 h_max: int = 7):
         self.__image = image
-        self.__h_min, self.__h_max = 3, 7
+        self.__h_min, self.__h_max = h_min, h_max
 
     def noised_image(self) -> np.ndarray:
         size = (randint(self.__h_min, self.__h_max) << 1) + 1
@@ -91,11 +106,18 @@ class DeFocusBlurNoiser(IRandomNoiser):
 
 
 class PeriodicNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 a_min: int = 25,
+                 a_max: int = 70,
+                 p_min: int = 5,
+                 p_max: int = 15,
+                 o_min: int = 5,
+                 o_max: int = 10):
         self.__image = image
-        self.__a_min, self.__a_max = 25, 70
-        self.__p_min, self.__p_max = 5, 15
-        self.__o_min, self.__o_max = 5, 10
+        self.__a_min, self.__a_max = a_min, a_max
+        self.__p_min, self.__p_max = p_min, p_max
+        self.__o_min, self.__o_max = o_min, o_max
 
     def noised_image(self) -> np.ndarray:
         amplitude = randint(self.__a_min, self.__a_max)
@@ -114,9 +136,12 @@ class PeriodicNoiser(IRandomNoiser):
 
 
 class PoissonNoiser(IRandomNoiser):
-    def __init__(self, image: np.ndarray):
+    def __init__(self,
+                 image: np.ndarray,
+                 peak_min: int = 20,
+                 peak_max: int = 60):
         self.__image = image
-        self.__peak_min, self.__peak_max = 1, 50
+        self.__peak_min, self.__peak_max = peak_min, peak_max
 
     def noised_image(self) -> np.ndarray:
         peak = randint(self.__peak_min, self.__peak_max)
@@ -132,21 +157,21 @@ class PlaceHolder(IRandomNoiser):
         return self.__image
 
 
-def get_noiser(image: np.ndarray, idx: int) -> IRandomNoiser:
+def get_noiser(image: np.ndarray, idx: int, *args, **kwargs) -> IRandomNoiser:
     match idx:
         case 0:
-            return GaussianNoiser(image)
+            return GaussianNoiser(image, *args, **kwargs)
         case 1:
-            return UniformNoiser(image)
+            return UniformNoiser(image, *args, **kwargs)
         case 2:
-            return SaltNPaperNoiser(image)
+            return SaltNPaperNoiser(image, *args, **kwargs)
         case 3:
-            return MotionBlurNoiser(image)
+            return MotionBlurNoiser(image, *args, **kwargs)
         case 4:
-            return DeFocusBlurNoiser(image)
+            return DeFocusBlurNoiser(image, *args, **kwargs)
         case 5:
-            return PeriodicNoiser(image)
+            return PeriodicNoiser(image, *args, **kwargs)
         case 6:
-            return PoissonNoiser(image)
+            return PoissonNoiser(image, *args, **kwargs)
         case _:
             return PlaceHolder(image)

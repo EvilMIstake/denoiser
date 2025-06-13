@@ -9,7 +9,11 @@ from utils.noise.noise import noiser as noiser_
 
 
 class Noiser(dataset_mapping.IMapper):
-    def __init__(self, left: int, right: int):
+    def __init__(self,
+                 left: int,
+                 right: int,
+                 *args,
+                 **kwargs):
         """
         :param left: start of the range of noise classes
         :param right: end of the range of noise classes
@@ -18,9 +22,17 @@ class Noiser(dataset_mapping.IMapper):
         self.__left = left
         self.__right = right
 
+        self.__args = args
+        self.__kwargs = kwargs
+
     def __call__(self, pipeline_data: data.LoadData) -> Iterable[data.LoadData]:
         idx = random.randint(self.__left, self.__right)
-        noiser_entity = noiser_.get_noiser(pipeline_data.data, idx)
+        noiser_entity = noiser_.get_noiser(
+            pipeline_data.data,
+            idx,
+            *self.__args,
+            **self.__kwargs
+        )
         pipeline_data.data = noiser_entity.noised_image()
         return pipeline_data,
 
