@@ -280,7 +280,8 @@ def train(noised_image_path: pathlib.Path,
     train_dataset = dataset.DnCnnDataset(
         noised_data_path=train_noised_img_path,
         cleaned_data_path=train_real_img_path,
-        reader=readers.CVReader()
+        reader=readers.CVReader(),
+        crop_size=None
     )
     train_dl = utils.ToDeviceLoader(
         torch.utils.data.DataLoader(
@@ -298,7 +299,8 @@ def train(noised_image_path: pathlib.Path,
     val_dataset = dataset.DnCnnDataset(
         noised_data_path=val_noised_img_path,
         cleaned_data_path=val_real_img_path,
-        reader=readers.CVReader()
+        reader=readers.CVReader(),
+        crop_size=None
     )
     val_dl = utils.ToDeviceLoader(
         torch.utils.data.DataLoader(
@@ -336,14 +338,15 @@ def test(test_path: pathlib.Path,
 
 if __name__ == "__main__":
     # Postfix
-    px = "blur"
+    px = "periodic"
     dataset_name = f"BSDS500"
 
     # Training
     noised_img_path = __SRC__ / f"{dataset_name}-{px}-pfr"
     real_img_path = __SRC__ / f"{dataset_name}-pfr"
-    # parameters_path = __MODEL_STATES__ / "DnCNN" / "Model_poisson_20l_2025-05-09T200955" / "46_epoch.pth"
-    parameters_path = None
+
+    from utils import __MODEL_SRC__
+    parameters_path = __MODEL_SRC__ / "model_periodic.pth"
 
     train(
         noised_img_path,

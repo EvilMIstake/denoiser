@@ -8,7 +8,7 @@ from utils.noise import (
 
 if __name__ == "__main__":
     # Noiser stuff
-    left, right = -1, -1
+    left, right = 6, 6
     noiser = mappers.Noiser(left, right)
 
     # Cropper stuff
@@ -24,14 +24,14 @@ if __name__ == "__main__":
     # Rotator stuff
     rotator = mappers.Rotator()
 
-    mode = "val"
-    i_path = __SRC__ / "BSDS500-poisson-pfr" / mode
-    e_path = __SRC__ / "BSDS500-noised_classes" / mode / "5"
+    mode = ""
+    i_path = __SRC__ / "imagenet-mini-shrink" / mode
+    e_path = __SRC__ / "imagenet-mini-noised" / mode
 
     num_workers = 4
     mapper = noiser
     reader = readers.CVReader()
-    part = slice(0, 1000000, 10)
+    part = slice(3096, 4000, 1)
 
     dataset_mapping.dataset_process(
         i_path,

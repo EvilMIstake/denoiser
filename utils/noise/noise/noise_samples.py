@@ -75,7 +75,7 @@ def periodic_noise(shape: tuple[int, int, ...],
         reps_x, reps_y = sy, 1
 
     x = np.arange(0, sx).reshape(dir_x, dir_y)
-    cos_vector = np.uint8(amplitude * (1. + np.cos(2. * np.pi * x / period)) * 0.5 + offset)
+    cos_vector = np.uint8(amplitude * (1. + np.cos(2. * np.pi * x / period + offset)) * 0.5)
     p_noise = np.tile(cos_vector, (reps_x, reps_y))
     noise = np.repeat(np.expand_dims(p_noise, axis=2), c, axis=2)
 
