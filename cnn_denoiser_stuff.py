@@ -117,7 +117,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                 optimizer.step()
 
                 # Evaluate results
-                numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
+                numpy_predicted_batch = np.uint8(prediction.detach().cpu().clip(0., 1.).numpy() * 255.)
                 numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
                 # Add batch PSNR/LOSS values
@@ -152,7 +152,7 @@ def _train(train_dataloader: utils.ToDeviceLoader,
                     loss_val = get_loss(prediction, real)
 
                     numpy_noised_batch = np.uint8(noised.cpu().numpy() * 255.)
-                    numpy_predicted_batch = np.uint8(prediction.detach().cpu().numpy() * 255.)
+                    numpy_predicted_batch = np.uint8(prediction.detach().cpu().clip(0., 1.).numpy() * 255.)
                     numpy_real_batch = np.uint8(real.cpu().numpy() * 255.)
 
                     # Add batch PSNR/LOSS values
