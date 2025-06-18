@@ -38,7 +38,7 @@ class Denoiser:
         self._blur_model = self.get_model(blur_model_pth, 20)
         self._impulse_model = self.get_model(impulse_model_pth, 20)
         self._periodic_model = self.get_model(periodic_model_pth, 20)
-        self._poisson_model = self.get_model(poisson_model_pth, 20)
+        self._poisson_model = self.get_model(poisson_model_pth, 20, True)
         self._classifier = self.get_classificator(classifier_model_pth, 6)
 
         self.__classification_transform = transforms.Normalize(
